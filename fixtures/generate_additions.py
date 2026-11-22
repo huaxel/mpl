@@ -1108,6 +1108,16 @@ case("axis_off_tight", ("plot", [x, sx]), ("set_xlabel", ["a long x label that t
 case("axis_limits", ("plot", [x, sx]), ("axis", [[1, 8, -2, 2]]))
 case("axis_limit_kwargs", ("plot", [x, sx]), ("axis", [], {"xmin": 2, "ymax": 3}))
 
+# Issue #94: Inter's Superscripts and Subscripts (U+2070–U+209F) and ¹ ² ³, in every bundled weight, kerned as Inter kerns them
+SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁱⁿ ¹²³"
+SUB = "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ ₐₑₒₓₔₕₖₗₘₙₚₛₜ"
+case("font_inter_superscripts", ("$rc", [], {"font.family": ["Inter"]}),
+     ("plot", [[1, 2, 3], [2e-15, 7e-15, 5e-15]], {"label": "7×10⁻¹⁵ au"}), ("plot", [[1, 2, 3], [6e-15, 1e-15, 3e-15]], {"label": "H₂O, CO₂"}),
+     ("legend", []), ("set_title", ["7×10⁻¹⁵ au · x² + y³ = r¹"]), ("set_ylabel", ["a (m s⁻²)"]), ("set_xlabel", ["T⁻¹ V₂ A⁽ⁿ⁾ Y₀ W⁹"]),
+     ("text", [1.05, 6.4e-15, SUP]), ("text", [1.05, 5.6e-15, SUB], {"fontweight": "medium"}),
+     ("text", [1.05, 4.8e-15, SUP], {"fontweight": "semibold"}), ("text", [1.05, 4.0e-15, SUB], {"fontweight": "bold"}),
+     ("text", [1.05, 3.2e-15, "10⁻³ ≤ x₁ ≤ 10³"], {"fontweight": "bold"}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

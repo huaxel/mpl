@@ -2,24 +2,24 @@
   "tolerance": 0.02,
   "note": "bytes; esbuild --minify then gzip -9; see scripts/bundle_size.ts",
   "main": {
-    "min": 566776,
-    "gzip": 199299
+    "min": 568593,
+    "gzip": 199909
   },
   "lean": {
-    "min": 400151,
-    "gzip": 134886
+    "min": 401976,
+    "gzip": 135503
   },
   "lean+inter+2cmaps": {
-    "min": 905746,
-    "gzip": 239923
+    "min": 952238,
+    "gzip": 251826
   },
   "everything": {
-    "min": 1462806,
-    "gzip": 438199
+    "min": 1509308,
+    "gzip": 449866
   },
   "main+annotate": {
-    "min": 571164,
-    "gzip": 201275
+    "min": 572983,
+    "gzip": 201929
   },
   "interactive": {
     "min": 18624,
