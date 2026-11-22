@@ -459,6 +459,9 @@ export type AxesSpec = {
   readonly hiddenLabels: { readonly x: boolean; readonly y: boolean };
   /** Axes.set_frame_on: false draws neither the axes patch nor the spines (pie with frame=False). */
   readonly frameOn: boolean;
+  /** Axes.axison (set_axis_off / axis('off')): false draws neither the x and y Axis (ticks, tick labels, axis labels, offset
+   *  text, grid) nor the axes patch and spines; artists, titles and the legend still draw. */
+  readonly axisOn: boolean;
 };
 export type FigureSpec = {
   readonly widthIn: number; readonly heightIn: number; readonly dpi: number; readonly theme: Theme; readonly axes: readonly AxesSpec[];

@@ -364,6 +364,20 @@ axhspan(ymin, ymax, { xmin, xmax, …axvspan's }) — axvspan across: data y ymi
 
 Keyword arguments (unknown keys throw): `xmin`, `xmax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `linestyle | ls`, `zorder`
 
+### `Axes.set_axis_off()`
+
+set_axis_off() — Axes.set_axis_off: no x and y Axis (ticks, tick labels, axis labels, offset text, grid), axes patch or spines. Artists, titles and the legend still draw, and tight_layout leaves the axis decorations out.
+
+### `Axes.set_axis_on()`
+
+set_axis_on() — Axes.set_axis_on: undo set_axis_off().
+
+### `Axes.axis(...argAndKwargs)`
+
+axis(arg?, { xmin, xmax, ymin, ymax }) — Axes.axis: 'off' / false is set_axis_off(), 'on' / true set_axis_on(); [xmin, xmax, ymin, ymax] sets both view limits, as do the keywords (each pair only when given). Returns [xmin, xmax, ymin, ymax], the view limits after it. The other options ('equal', 'tight', 'scaled', 'auto', 'image', 'square') are not supported and throw.
+
+Keyword arguments (unknown keys throw): `xmin`, `xmax`, `ymin`, `ymax`
+
 ### `Axes.set_title(s, kwargs?)`
 
 set_title(label, { loc, pad, y, fontdict, fontsize|size, fontweight|weight, color|c }) — Axes.set_title: each loc ('left' | 'center' | 'right', default axes.titlelocation) is its own title, so a left and a right title can sit beside the centred one. Every call resets that title's size and weight to axes.titlesize/titleweight (and its colour to axes.titlecolor unless 'auto'), applies `fontdict`, then the keywords; `pad` (points, default axes.titlepad) moves every title; `y` is the baseline in axes fractions (default 1, the top).

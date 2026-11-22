@@ -1729,6 +1729,125 @@
    "raises": "TypeError",
    "message": "Axes.fill_between() takes from 3 to 7 positional arguments but 8 were given",
    "note": "a positional past step"
+  },
+  {
+   "call": [
+    "axis",
+    [
+     "off"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axis",
+    [
+     true
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axis",
+    [
+     [
+      0,
+      1,
+      0,
+      1
+     ]
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axis",
+    [
+     "sideways"
+    ],
+    {}
+   ],
+   "raises": "ValueError",
+   "message": "Unrecognized string 'sideways' to axis; try 'on' or 'off'",
+   "note": "unknown option"
+  },
+  {
+   "call": [
+    "axis",
+    [
+     [
+      0,
+      1,
+      2
+     ]
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "The first argument to axis() must be an iterable of the form [xmin, xmax, ymin, ymax]",
+   "note": "three limits"
+  },
+  {
+   "call": [
+    "axis",
+    [],
+    {
+     "arg": "off"
+    }
+   ],
+   "raises": "TypeError",
+   "message": "axis() got an unexpected keyword argument 'arg'",
+   "note": "arg is positional-only"
+  },
+  {
+   "call": [
+    "axis",
+    [
+     "off"
+    ],
+    {
+     "xmin": 1
+    }
+   ],
+   "raises": "TypeError",
+   "message": "axis() got an unexpected keyword argument 'xmin'",
+   "note": "a limit keyword with an option"
+  },
+  {
+   "call": [
+    "set_axis_off",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_axis_off() takes 1 positional argument but 2 were given",
+   "note": "one positional too many"
+  },
+  {
+   "call": [
+    "set_axis_on",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_axis_on() takes 1 positional argument but 2 were given",
+   "note": "one positional too many"
   }
  ]
 }

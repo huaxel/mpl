@@ -300,12 +300,13 @@ function decorations(ax: AxesSpec, roles: Roles, theme: Theme, f: Frame, k: numb
     if (l.length > 0) xUp.push(bottomUp(ax.xlabel, b.x0 + (b.x1 - b.x0) / 2, A.labelPadPt, 'center', A.labelSizePt, theme.font.labelWeight));
   }
   out = yOut;
-  if (roles.yOnRight) {
+  // the y label and offset text belong to the YAxis, which axison off leaves out (roles.y is hidden then)
+  if (ax.axisOn && roles.yOnRight) {
     let right = sp.xRight + half;
     for (const lb of yb.far) right = Math.max(right, lb.x1);
     if (!ax.hiddenLabels.y) yBoxes.push(...optBox(put(yt.offset, b.x1, b.yTop - pad, { kind: 'horizontal', ha: 'right', va: 'baseline' }, theme.ytick.labelSizePt, theme.ytick.color)));
     yBoxes.push(...optBox(put(ax.ylabel, right + lp, b.yTop + (b.yBot - b.yTop) / 2, { kind: 'ylabelRight' }, A.labelSizePt, A.labelColor, theme.font.labelWeight), collapseY));
-  } else {
+  } else if (ax.axisOn) {
     let left = sp.xLeft - half;
     for (const lb of yb.near) left = Math.min(left, lb.x0);
     if (!ax.hiddenLabels.y) yBoxes.push(...optBox(put(yt.offset, b.x0, b.yTop - pad, { kind: 'horizontal', ha: 'left', va: 'baseline' }, theme.ytick.labelSizePt, theme.ytick.color)));
@@ -469,7 +470,10 @@ function layoutAxes(inp: AxesIn, fig: FigureSpec, mode: LayoutMode, dev: Device,
   const W = fig.widthIn * dpi, H = fig.heightIn * dpi;
   const Hg = geomHeight(H, dev);
   const box = axesBox(ax.position, W, H, Hg);
-  const roles = roleImplies(ax.role, inp.hasTwin, theme, ax.hiddenLabels);
+  // _AxesBase.draw: with axison off neither Axis draws (ticks, labels, offset text, grid), nor the patch and spines
+  const roles0 = roleImplies(ax.role, inp.hasTwin, theme, ax.hiddenLabels);
+  const roles: Roles = ax.axisOn ? roles0 : { ...roles0, x: { kind: 'hidden' }, y: { kind: 'hidden' } };
+  const frameOn = ax.frameOn && ax.axisOn;
   const xs = scaleOf(ax.x), ys = scaleOf(ax.y);
 
   const xlim = inp.x.lim, ylim = inp.y.lim;
@@ -478,7 +482,7 @@ function layoutAxes(inp: AxesIn, fig: FigureSpec, mode: LayoutMode, dev: Device,
   const clip: Clip = { kind: 'rect', x: box.x0, y: box.yTopG, w: box.w, h: box.h };
 
   // _AxesBase.draw: the axes patch and the spines draw only when the frame is on (set_frame_on)
-  const face = roles.patch && ax.frameOn ? inkOf(theme.axes.face, none) : none;
+  const face = roles.patch && frameOn ? inkOf(theme.axes.face, none) : none;
   // The axes patch is a rectilinear, edgeless path: Agg snaps its corners to whole pixels (snap value 0).
   // (matplotlib's SVG backend draws it unsnapped)
   const bx0 = snapIf(f.snap, box.x0, 0), bx1 = snapIf(f.snap, box.x1, 0), by0 = snapIf(f.snap, box.yTopG, 0), by1 = snapIf(f.snap, box.yBotG, 0);
@@ -523,7 +527,7 @@ function layoutAxes(inp: AxesIn, fig: FigureSpec, mode: LayoutMode, dev: Device,
   // stable and ties keep matplotlib's get_children order (children, spines, then the axes), which
   // matters for axisbelow=False: the axis (2.5) then draws over the spines (2.5).
   const layers: ReadonlyArray<readonly [number, readonly Node[]]> = [
-    ...artistLayers, [2.5, ax.frameOn ? spinesForAxes(ax, theme, f, k) : []],
+    ...artistLayers, [2.5, frameOn ? spinesForAxes(ax, theme, f, k) : []],
     // Axis.draw: gridlines, ticks and tick labels, then the offset text and the axis label
     [axisZ(theme.axes.axisBelow), [...clipped(xa.grid), ...xa.marks, ...deco.x, ...clipped(ya.grid), ...ya.marks, ...deco.y]],
     [3, [...userTexts, ...deco.title]], [5, legend.kind === 'some' ? legend.value.out.nodes : []],
@@ -550,7 +554,7 @@ function layoutAxes(inp: AxesIn, fig: FigureSpec, mode: LayoutMode, dev: Device,
           ...deco.boxes.y.map(flip(H))] : []),
         ...deco.boxes.titles,
         // get_default_bbox_extra_artists drops the spines when the frame is off
-        ...(ax.frameOn ? spineBoxes(ax, roles, f, k, xt, yt).map(flip(H)) : []),
+        ...(frameOn ? spineBoxes(ax, roles, f, k, xt, yt).map(flip(H)) : []),
         ...(legend.kind === 'some' ? [{ box: { x0: legend.value.out.box.x0, x1: legend.value.out.box.x1, y0: H - legend.value.out.box.y1, y1: H - legend.value.out.box.y0 },
                                         up: { b: legend.value.out.box.y0, t: legend.value.out.box.y1 } }] : []),
       ]),

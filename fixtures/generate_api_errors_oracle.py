@@ -102,6 +102,17 @@ case("fill_between", [FX, FY, 0, [True, True, True, True]], {"where": [True, Tru
 case("fill_between", [FX, FY], {"step": "sideways"}, note="unknown step")
 case("fill_between", [FX, FY, 0, None, False, "mid", 1], note="a positional past step")
 
+# Issue #93: axis(arg) takes 'on' / 'off' / a bool / [xmin, xmax, ymin, ymax]; set_axis_off / set_axis_on take nothing
+case("axis", ["off"])
+case("axis", [True])
+case("axis", [[0, 1, 0, 1]])
+case("axis", ["sideways"], note="unknown option")
+case("axis", [[0, 1, 2]], note="three limits")
+case("axis", [], {"arg": "off"}, note="arg is positional-only")
+case("axis", ["off"], {"xmin": 1}, note="a limit keyword with an option")
+case("set_axis_off", [0], note="one positional too many")
+case("set_axis_on", [0], note="one positional too many")
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

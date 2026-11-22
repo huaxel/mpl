@@ -273,6 +273,9 @@ function parseWhere(v: unknown, n: number): readonly boolean[] {
   if (v.length !== n) throw new Error(`where size (${v.length}) does not match 'x' size (${n})`);
   return v.map((b) => b === true || (typeof b === 'number' && b !== 0));
 }
+const isGiven = (o: Option<unknown>): boolean => o.kind === 'some';
+/** An Axis' view limits once settled (an autoscaled axis with nothing to scale reads [0, 1]). */
+const viewOf = (ax: Axis): readonly [number, number] => (ax.limits.kind === 'auto' ? [0, 1] : [ax.limits.lo, ax.limits.hi]);
 /** A point (x, y), as matplotlib's xy tuples. */
 export type XY = readonly [number, number];
 const DATA_COORDS: LineCoords = { x: 'data', y: 'data' };
@@ -731,6 +734,8 @@ export class Axes {
   private boxAspect: Option<number> = none;
   /** Axes.set_anchor: (x, y) in [0,1] within the original position when box/data aspect shrinks it. */
   private anchorXY: readonly [number, number] = [0.5, 0.5];
+  /** axison: set_axis_off() / axis('off') turn the Axis, patch and spines off. */
+  private axisOn = true;
   /** set_frame_on: the axes patch and spines draw (pie with frame=False turns it off). */
   private frameOn = true;
   /** Colorbar axes: hide the short-axis ticks and use a custom outline later. */
@@ -2115,6 +2120,52 @@ export class Axes {
     this.artists.push(sp); this.yaxis.request(); return sp;
   }
 
+  /** set_axis_off() — Axes.set_axis_off: no x and y Axis (ticks, tick labels, axis labels, offset text, grid), axes patch or spines.
+   *  Artists, titles and the legend still draw, and tight_layout leaves the axis decorations out. */
+  set_axis_off(): this { arity('set_axis_off', arguments.length, 0, false); this.axisOn = false; return this; }
+  /** set_axis_on() — Axes.set_axis_on: undo set_axis_off(). */
+  set_axis_on(): this { arity('set_axis_on', arguments.length, 0, false); this.axisOn = true; return this; }
+  /**
+   * axis(arg?, { xmin, xmax, ymin, ymax }) — Axes.axis: 'off' / false is set_axis_off(), 'on' / true set_axis_on(); [xmin, xmax,
+   * ymin, ymax] sets both view limits, as do the keywords (each pair only when given). Returns [xmin, xmax, ymin, ymax], the view
+   * limits after it. The other options ('equal', 'tight', 'scaled', 'auto', 'image', 'square') are not supported and throw.
+   */
+  axis(...argAndKwargs: readonly unknown[]): readonly [number, number, number, number] {
+    // axis(arg=None, /, **kwargs): arg is positional-only, so it is not a key of the keyword object
+    const last = argAndKwargs.length > 0 ? argAndKwargs[argAndKwargs.length - 1] : 0;
+    const kwObj: Kwargs = isPlainObject(last) ? last : {};
+    const pos = isPlainObject(last) ? argAndKwargs.slice(0, -1) : argAndKwargs;
+    if (pos.length > 1) throw new TypeError(`axis() takes at most 1 positional argument and one keyword object, but got ${pos.length} positionals`);
+    const arg: Option<unknown> = pos.length === 1 && !isNullish(pos[0]) ? some(pos[0]) : none;
+    const kw = new KwReader(kwObj, 'axis');
+    const xmin = kw.get(['xmin']), xmax = kw.get(['xmax']), ymin = kw.get(['ymin']), ymax = kw.get(['ymax']);
+    kw.done();
+    if (arg.kind === 'some' && (isGiven(xmin) || isGiven(xmax) || isGiven(ymin) || isGiven(ymax))) throw new TypeError('axis() got an unexpected keyword argument with a positional limit or option: pass one or the other');
+    if (arg.kind === 'some') {
+      const a = arg.value;
+      if (a === 'off' || a === false) this.axisOn = false;
+      else if (a === 'on' || a === true) this.axisOn = true;
+      else if (typeof a === 'string') {
+        const known = ['equal', 'tight', 'scaled', 'auto', 'image', 'square'];
+        throw new Error(known.includes(a) ? `axis('${a}') is not supported in mpl yet` : `Unrecognized string '${a}' to axis; try 'on' or 'off'`);
+      } else if (Array.isArray(a) && a.length === 4) {
+        this.set_xlim(a[0], a[1]);
+        this.set_ylim(a[2], a[3]);
+      } else {
+        throw new TypeError(`The first argument to axis() must be an array of length 4, a string or a bool, got ${describeArg(a)}`);
+      }
+    } else if (isGiven(xmin) || isGiven(xmax) || isGiven(ymin) || isGiven(ymax)) {
+      // set_xlim(xmin, xmax): a bound left out keeps its current (autoscaled) value
+      this.settle();
+      const [x0, x1] = viewOf(this.xaxis), [y0, y1] = viewOf(this.yaxis);
+      const boundOr = (o: Option<unknown>, d: number, what: string): number => (o.kind === 'some' ? unwrap(num(what)(o.value)) : d);
+      if (isGiven(xmin) || isGiven(xmax)) this.set_xlim(boundOr(xmin, x0, 'xmin'), boundOr(xmax, x1, 'xmax'));
+      if (isGiven(ymin) || isGiven(ymax)) this.set_ylim(boundOr(ymin, y0, 'ymin'), boundOr(ymax, y1, 'ymax'));
+    }
+    this.settle();
+    const [x0, x1] = viewOf(this.xaxis), [y0, y1] = viewOf(this.yaxis);
+    return [x0, x1, y0, y1];
+  }
   /**
    * set_title(label, { loc, pad, y, fontdict, fontsize|size, fontweight|weight, color|c }) — Axes.set_title: each
    * loc ('left' | 'center' | 'right', default axes.titlelocation) is its own title, so a left and a right title can
@@ -2424,6 +2475,7 @@ export class Axes {
       yShare: this.fig.axes.findIndex((o) => o.yaxis === this.yaxis),
       hiddenLabels: this.hiddenLabels,
       frameOn: this.frameOn,
+      axisOn: this.axisOn,
     };
   }
 }

@@ -1092,6 +1092,22 @@ case("fill_between_step_where_interpolate", ("plot", [SX, SY], {"drawstyle": "st
 case("fill_between_step_dates", ("fill_between", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190]], {"step": "post", "alpha": 0.35, "label": "bytes"}),
      ("step", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190]], {"where": "post"}), ("set_ylabel", ["KiB"]), ("fig.autofmt_xdate", []))
 
+# Issue #93: set_axis_off() / axis('off') hide both Axis (ticks, labels, axis labels, grid), the patch and the spines;
+# artists, titles and the legend still draw; set_axis_on() / axis('on') undo it; axis([x0, x1, y0, y1]) and xmin..ymax set limits
+case("axis_off_text_panel", ("text", [0.5, 0.55, "42"], {"transform": AX, "ha": "center", "va": "center", "fontsize": 48}),
+     ("text", [0.5, 0.25, "requests / s"], {"transform": AX, "ha": "center", "color": "0.4"}), ("set_title", ["scoreboard"]), ("axis", ["off"]))
+case("set_axis_off_image", ("imshow", [HEAT], {"cmap": "magma", "interpolation": "nearest"}), ("set_xlabel", ["hidden label"]), ("set_axis_off", []),
+     ("set_title", ["image, no axes"]))
+case("axis_off_on_grid", ("$subplots", [1, 3], {"figsize": [9, 3]}),
+     ("plot", [x, sx], {"label": "sin"}), ("grid", [True]), ("set_xlabel", ["x"]), ("legend", []), ("set_axis_off", []), ("set_title", ["off"]),
+     ("sca", [1]), ("plot", [x, cx]), ("grid", [True]), ("set_xlabel", ["x"]), ("axis", ["off"]), ("axis", ["on"]), ("set_title", ["off then on"]),
+     ("sca", [2]), ("bar", [[1, 2, 3], [3, 1, 2]]), ("set_axis_off", []), ("set_axis_on", []), ("set_ylabel", ["y"]),
+     ("fig.tight_layout", []))
+case("axis_off_tight", ("plot", [x, sx]), ("set_xlabel", ["a long x label that tight_layout would leave room for"]), ("set_ylabel", ["y"]),
+     ("axis", [False]), ("fig.tight_layout", []))
+case("axis_limits", ("plot", [x, sx]), ("axis", [[1, 8, -2, 2]]))
+case("axis_limit_kwargs", ("plot", [x, sx]), ("axis", [], {"xmin": 2, "ymax": 3}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:
