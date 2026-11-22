@@ -1073,6 +1073,398 @@
    "raises": "TypeError",
    "message": "Axes.fill_between() got multiple values for argument 'y2'",
    "note": "y2 twice"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ]
+    ],
+    {
+     "labels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "color": "C3",
+     "fontsize": 12
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "rotation": 45,
+     "ha": "right"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b"
+     ]
+    ],
+    {}
+   ],
+   "raises": "ValueError",
+   "message": "The number of FixedLocator locations (3), usually from a call to set_ticks, does not match the number of labels (2).",
+   "note": "labels shorter than ticks"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c",
+      "d"
+     ]
+    ],
+    {}
+   ],
+   "raises": "ValueError",
+   "message": "The number of FixedLocator locations (3), usually from a call to set_ticks, does not match the number of labels (4).",
+   "note": "labels longer than ticks"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ]
+    ],
+    {
+     "fontsize": 12
+    }
+   ],
+   "raises": "ValueError",
+   "message": "Incorrect use of keyword argument 'fontsize'. Keyword arguments other than 'minor' modify the text labels and can only be used if 'labels' are passed as well.",
+   "note": "text kwargs need labels"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "bogus": 1
+    }
+   ],
+   "raises": "AttributeError",
+   "message": "Text.set() got an unexpected keyword argument 'bogus'",
+   "note": "not a Text property"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "labels": [
+      "d",
+      "e",
+      "f"
+     ]
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticks() got multiple values for argument 'labels'",
+   "note": "labels twice"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     5
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "labels=5 must be a sequence",
+   "note": "labels not iterable"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ]
+    ],
+    {
+     "labels": [
+      "a",
+      "b",
+      "c"
+     ],
+     "color": "C3",
+     "fontsize": 12
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "rotation": 45,
+     "ha": "right"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b"
+     ]
+    ],
+    {}
+   ],
+   "raises": "ValueError",
+   "message": "The number of FixedLocator locations (3), usually from a call to set_ticks, does not match the number of labels (2).",
+   "note": "labels shorter than ticks"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c",
+      "d"
+     ]
+    ],
+    {}
+   ],
+   "raises": "ValueError",
+   "message": "The number of FixedLocator locations (3), usually from a call to set_ticks, does not match the number of labels (4).",
+   "note": "labels longer than ticks"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ]
+    ],
+    {
+     "fontsize": 12
+    }
+   ],
+   "raises": "ValueError",
+   "message": "Incorrect use of keyword argument 'fontsize'. Keyword arguments other than 'minor' modify the text labels and can only be used if 'labels' are passed as well.",
+   "note": "text kwargs need labels"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "bogus": 1
+    }
+   ],
+   "raises": "AttributeError",
+   "message": "Text.set() got an unexpected keyword argument 'bogus'",
+   "note": "not a Text property"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      "a",
+      "b",
+      "c"
+     ]
+    ],
+    {
+     "labels": [
+      "d",
+      "e",
+      "f"
+     ]
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticks() got multiple values for argument 'labels'",
+   "note": "labels twice"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     5
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "labels=5 must be a sequence",
+   "note": "labels not iterable"
   }
  ]
 }

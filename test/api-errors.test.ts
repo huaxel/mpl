@@ -1,8 +1,8 @@
-// No argument is dropped silently (issue #86). fixtures/api_errors_oracle.json records which calls matplotlib 3.11.2 rejects
+// No argument is dropped silently (issues #86, #89). fixtures/api_errors_oracle.json records which calls matplotlib 3.11.2 rejects
 // with a TypeError (fixtures/generate_api_errors_oracle.py); mpl must reject each of them with a TypeError too. The calls
 // matplotlib accepts and mpl runs are pinned pixel-exact by fixtures/ref (bar_positional_*, fill_between_y2_keyword).
 import { readFileSync } from 'node:fs';
-import { subplots } from '../src/index.ts';
+import { subplots, type Axes } from '../src/index.ts';
 
 type Case = { readonly call: readonly [string, readonly unknown[], Readonly<Record<string, unknown>>]; readonly raises: string | null; readonly note: string };
 const ORACLE: { readonly cases: readonly Case[] } = JSON.parse(readFileSync(new URL('../fixtures/api_errors_oracle.json', import.meta.url), 'utf8'));
@@ -33,6 +33,14 @@ for (const c of ORACLE.cases) {
   } else if (c.raises === null) {
     accepted++;
     check(e === null, `${show(c)}: matplotlib accepts it; mpl threw ${e === null ? '' : `${e.name}: ${e.message}`}`);
+  } else if (c.raises === 'AttributeError') {
+    // Text.set()/Artist.set() reject an unknown property with AttributeError; mpl's unknown keyword is a TypeError
+    rejected++;
+    check(e instanceof TypeError && /unexpected keyword argument/.test(e.message), `${show(c)}: matplotlib raises AttributeError (${c.note}); mpl ${e === null ? 'accepted it' : `threw ${e.name}: ${e.message}`}`);
+  } else if (c.raises === 'ValueError') {
+    // a ValueError is a plain Error in mpl (mpl-web answers 400), never a TypeError or RangeError
+    rejected++;
+    check(e !== null && e.constructor === Error, `${show(c)}: matplotlib raises ValueError (${c.note}); mpl ${e === null ? 'accepted it' : `threw ${e.name}: ${e.message}`}`);
   } else {
     check(false, `${show(c)}: oracle raises ${c.raises}, which this test does not map`);
   }
@@ -47,6 +55,27 @@ for (const c of ORACLE.cases) {
   fig.toSVG();
   check(a.label.kind === 'text' && a.label.text === 'one' && b.label.kind === 'text' && b.label.text === 'two', 'issue #86: labels reach the bars');
   check([...b.y].join() === '300,500' && [...a.w].join() === '0.72,0.72', `issue #86: bottom and width applied, got y=${[...b.y]} w=${[...a.w]}`);
+}
+
+const labelsAfter = (f: (ax: Axes) => void): readonly string[] => {
+  const [fig, ax] = subplots();
+  ax.plot([0, 1, 2], [0, 1, 0]);
+  f(ax);
+  fig.toSVG();
+  return ax.get_xticklabels().map((t) => t.get_text());
+};
+const svg = (f: (ax: Axes) => void): string => { const [fig, ax] = subplots(); ax.plot([0, 1, 2], [0, 1, 0]); f(ax); return fig.toSVG(); };
+// Issue #89's reproducer: set_xticks(ticks, labels) and the labels keyword set the labels; an unknown keyword throws
+{
+  check(labelsAfter((ax) => ax.set_xticks([0, 1, 2], ['a', 'b', 'c'])).join() === 'a,b,c', 'issue #89: set_xticks(ticks, labels)');
+  check(labelsAfter((ax) => ax.set_xticks([0, 1, 2], { labels: ['a', 'b', 'c'] })).join() === 'a,b,c', 'issue #89: set_xticks(ticks, { labels })');
+  try { labelsAfter((ax) => ax.set_xticks([0, 1, 2], { bogus: 1 })); check(false, 'issue #89: set_xticks(ticks, { bogus }) did not throw'); } catch (e) {
+    check(e instanceof TypeError && /unexpected keyword argument 'bogus'/.test((e as Error).message), `issue #89: bogus: ${(e as Error).message}`);
+  }
+  check(labelsAfter((ax) => { ax.set_xticks([0, 1, 2]); ax.set_xticklabels(['a', 'b', 'c']); }).join() === 'a,b,c', 'issue #89: two-call form');
+  // the one-call form draws exactly what the two-call form draws
+  check(svg((ax) => ax.set_yticks([0, 0.5, 1], ['lo', 'mid', 'hi'], { color: 'C3', rotation: 20 }))
+    === svg((ax) => { ax.set_yticks([0, 0.5, 1]); ax.set_yticklabels(['lo', 'mid', 'hi'], { color: 'C3', rotation: 20 }); }), 'issue #89: one call and two calls draw the same SVG');
 }
 
 // JS has no positional/keyword split, so the keyword object's slot must hold a plain object: anything else there is an

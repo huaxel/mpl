@@ -1030,6 +1030,14 @@ case("barh_positional_height_left", ("barh", [["x", "y", "z"], [3, 1, 2], 0.4, [
      ("barh", [["x", "y", "z"], [1, 2, 1], 0.4], {"left": [4, 3, 2], "label": "left kw"}), ("legend", []))
 case("fill_between_y2_keyword", ("fill_between", [x, sx], {"y2": 0.5, "alpha": 0.5}))
 
+# Issue #89: set_xticks(ticks, labels, **text kwargs) and set_yticks, positionally and by keyword
+case("set_ticks_labels", ("plot", [x, sx]),
+     ("set_xticks", [[0, 2.5, 5, 7.5, 10], ["zero", "a quarter", "half", "3/4", "ten"]]),
+     ("set_yticks", [[-1, 0, 1], ["low", "mid", "high"]], {"color": "C3", "fontsize": 12, "fontweight": "bold"}))
+case("set_ticks_labels_keyword", ("bar", [[0, 1, 2, 3], [3, 1, 4, 1]]),
+     ("set_xticks", [[0, 1, 2, 3]], {"labels": ["north", "east", "south", "west"], "rotation": 30, "ha": "right"}),
+     ("set_yticks", [[0, 2, 4]], {"labels": ["0", "two", "four"]}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

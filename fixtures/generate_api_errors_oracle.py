@@ -71,6 +71,19 @@ case("barh", [X, H, 0.4, 0, "edge"], note="align is keyword-only")
 case("fill_between", [[0, 1, 2], [1, 2, 1]], {"y2": 0.5})
 case("fill_between", [[0, 1, 2], [1, 2, 1], 0], {"y2": 0.5}, note="y2 twice")
 
+# Issue #89: set_xticks(ticks, labels=None, *, minor=False, **kwargs) is set_ticks then set_ticklabels(labels, **kwargs)
+T3 = [0, 1, 2]
+for m in ("set_xticks", "set_yticks"):
+    case(m, [T3, ["a", "b", "c"]])
+    case(m, [T3], {"labels": ["a", "b", "c"], "color": "C3", "fontsize": 12})
+    case(m, [T3, ["a", "b", "c"]], {"rotation": 45, "ha": "right"})
+    case(m, [T3, ["a", "b"]], note="labels shorter than ticks")
+    case(m, [T3, ["a", "b", "c", "d"]], note="labels longer than ticks")
+    case(m, [T3], {"fontsize": 12}, note="text kwargs need labels")
+    case(m, [T3, ["a", "b", "c"]], {"bogus": 1}, note="not a Text property")
+    case(m, [T3, ["a", "b", "c"]], {"labels": ["d", "e", "f"]}, note="labels twice")
+    case(m, [T3, 5], note="labels not iterable")
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

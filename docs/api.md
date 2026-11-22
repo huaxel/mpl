@@ -432,13 +432,17 @@ _No description._
 
 _No description._
 
-### `Axes.set_xticks(t)`
+### `Axes.set_xticks(ticks, ...labelsAndKwargs)`
 
-set_xticks(locs) — fixed major tick locations.
+set_xticks(ticks, labels?, { labels, minor, color|c, fontsize|size, fontweight|weight, rotation, ha, visible }) — fixed major tick locations, and with labels, set_xticklabels(labels, { … }) too, as matplotlib's set_xticks(ticks, labels=None, *, minor=False, **kwargs). labels must match ticks in length (an Error, matplotlib's ValueError); the text keywords need labels (likewise). minor=true is not supported and throws.
 
-### `Axes.set_yticks(t)`
+Keyword arguments (unknown keys throw): `labels`, `minor`, `color | c`, `fontsize | size`, `fontweight | weight`, `rotation`, `ha | horizontalalignment`, `visible`
 
-set_yticks(locs) — fixed major tick locations.
+### `Axes.set_yticks(ticks, ...labelsAndKwargs)`
+
+set_yticks(ticks, labels?, { labels, minor, …text }) — set_xticks for the y axis.
+
+Keyword arguments (unknown keys throw): `labels`, `minor`, `color | c`, `fontsize | size`, `fontweight | weight`, `rotation`, `ha | horizontalalignment`, `visible`
 
 ### `Axes.set_xticklabels(l, kwargs?)`
 

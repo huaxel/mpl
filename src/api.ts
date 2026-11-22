@@ -2191,10 +2191,49 @@ export class Axes {
   get_yinverted(): boolean { arity('get_yinverted', arguments.length, 0, false); this.settle(); return this.yaxis.inverted(); }
   xaxis_inverted(): boolean { arity('xaxis_inverted', arguments.length, 0, false); return this.get_xinverted(); }
   yaxis_inverted(): boolean { arity('yaxis_inverted', arguments.length, 0, false); return this.get_yinverted(); }
-  /** set_xticks(locs) — fixed major tick locations. */
-  set_xticks(t: unknown): this { arity('set_xticks', arguments.length, 1, false); this.xaxis.ticks = fixedTicks(t); return this; }
-  /** set_yticks(locs) — fixed major tick locations. */
-  set_yticks(t: unknown): this { arity('set_yticks', arguments.length, 1, false); this.yaxis.ticks = fixedTicks(t); return this; }
+  /**
+   * set_xticks(ticks, labels?, { labels, minor, color|c, fontsize|size, fontweight|weight, rotation, ha, visible }) — fixed
+   * major tick locations, and with labels, set_xticklabels(labels, { … }) too, as matplotlib's set_xticks(ticks, labels=None,
+   * *, minor=False, **kwargs). labels must match ticks in length (an Error, matplotlib's ValueError); the text keywords need
+   * labels (likewise). minor=true is not supported and throws.
+   */
+  set_xticks(ticks: unknown, ...labelsAndKwargs: readonly unknown[]): this {
+    const kw = new KwReader(bindPositional('set_xticks', ['labels'], labelsAndKwargs), 'set_xticks');
+    const labels = kw.get(['labels']);
+    const minor = kw.read(['minor'], bool('minor'), () => false);
+    return this.setTicks('x', ticks, labels, minor, kw, 'set_xticks');
+  }
+  /** set_yticks(ticks, labels?, { labels, minor, …text }) — set_xticks for the y axis. */
+  set_yticks(ticks: unknown, ...labelsAndKwargs: readonly unknown[]): this {
+    const kw = new KwReader(bindPositional('set_yticks', ['labels'], labelsAndKwargs), 'set_yticks');
+    const labels = kw.get(['labels']);
+    const minor = kw.read(['minor'], bool('minor'), () => false);
+    return this.setTicks('y', ticks, labels, minor, kw, 'set_yticks');
+  }
+  /** Axis.set_ticks: the locations, then (labels given) Axis.set_ticklabels with the text keywords. */
+  private setTicks(a: 'x' | 'y', t: unknown, labelsRaw: Option<unknown>, minor: boolean, kw: KwReader, fn: string): this {
+    if (minor) throw new Error(`${fn}(minor=true) is not supported: mpl has no fixed minor ticks`);
+    const style = this.readTextStyle(kw);
+    kw.done();
+    const ticks = fixedTicks(t);
+    if (labelsRaw.kind === 'none') {
+      const textKeys = Object.keys(kw.kw).filter((k) => k !== 'minor' && !isNullish(kw.kw[k]));
+      if (textKeys.length > 0) {
+        throw new Error(`Incorrect use of keyword argument '${textKeys[0]}'. Keyword arguments other than 'minor' modify the text labels and can only be used if 'labels' are passed as well.`);
+      }
+      (a === 'x' ? this.xaxis : this.yaxis).ticks = ticks;
+      return this;
+    }
+    const labels = fixedLabels(labelsRaw.value);
+    // Axis.set_ticklabels on a FixedLocator: one label per location
+    if (labels.kind === 'fixed' && ticks.kind === 'fixed' && labels.labels.length !== ticks.locs.length) {
+      throw new Error(`The number of FixedLocator locations (${ticks.locs.length}), usually from a call to set_ticks, does not match the number of labels (${labels.labels.length}).`);
+    }
+    (a === 'x' ? this.xaxis : this.yaxis).ticks = ticks;
+    (a === 'x' ? this.xaxis : this.yaxis).labels = labels;
+    if (labels.kind === 'fixed') labels.labels.forEach((_, i) => { this.styleTickLabel(a, i, style); });
+    return this;
+  }
   /** set_xticklabels(labels, { color|c, fontsize|size, fontweight|weight }): the kwargs style every label set here. */
   set_xticklabels(l: unknown, kwargs: Kwargs = {}): this { arity('set_xticklabels', arguments.length, 1, true); return this.setTickLabels('x', l, kwargs, 'set_xticklabels'); }
   /** set_yticklabels(labels, { color|c, fontsize|size, fontweight|weight }): the kwargs style every label set here. */
