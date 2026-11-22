@@ -1517,6 +1517,38 @@
    "raises": null,
    "message": null,
    "note": ""
+  },
+  {
+   "call": [
+    "legend",
+    [],
+    {
+     "bbox_to_anchor": [
+      0,
+      1.02
+     ],
+     "loc": "lower left"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "legend",
+    [],
+    {
+     "bbox_to_anchor": [
+      0,
+      1,
+      0.5
+     ]
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Bbox.from_bounds() missing 1 required positional argument: 'height'",
+   "note": "3 numbers"
   }
  ]
 }

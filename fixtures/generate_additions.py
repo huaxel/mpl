@@ -1057,6 +1057,17 @@ case("span_linestyle_legend", ("plot", [x, sx]),
      ("axvspan", [6, 7], {"color": "C2", "alpha": 0.3, "ls": "None", "lw": 3, "label": "no edge"}),
      ("legend", [], {"loc": "lower left"}))
 
+# Issue #91: legend bbox_to_anchor ([x, y] or [x, y, w, h] in axes fractions), with ncols and borderaxespad
+LEG3 = [("plot", [x, sx], {"label": "sin"}), ("plot", [x, cx], {"label": "cos"}), ("plot", [x, L(np.sin(x) * np.cos(x))], {"label": "sin cos"})]
+case("legend_bbox_above_row", *LEG3, ("legend", [], {"loc": "lower left", "bbox_to_anchor": [0, 1.02], "ncol": 3}))
+case("legend_bbox_right_column", *LEG3, ("legend", [], {"loc": "upper left", "bbox_to_anchor": [1.02, 1], "borderaxespad": 0}),
+     ("fig.tight_layout", []))
+case("legend_bbox_box_center", *LEG3, ("legend", [], {"loc": "lower center", "bbox_to_anchor": [0, 1.02, 1, 0.12], "ncols": 3, "frameon": False}),
+     ("set_title", ["a title above the legend row"], {"pad": 30}))
+case("legend_bbox_best_in_box", *LEG3, ("legend", [], {"loc": "best", "bbox_to_anchor": [0.5, 0, 0.5, 1]}))
+case("legend_bbox_below_tight", *LEG3, ("set_xlabel", ["x"]), ("legend", [], {"loc": "upper center", "bbox_to_anchor": [0.5, -0.15], "ncols": 3}),
+     ("fig.tight_layout", []))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

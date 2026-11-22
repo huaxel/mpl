@@ -505,10 +505,16 @@ function layoutAxes(inp: AxesIn, fig: FigureSpec, mode: LayoutMode, dev: Device,
   const sourced = legendEntries(ax, drawn), entries = sourced.map((e) => e.entry);
   const axesUp: Box = { x0: box.x0, x1: box.x1, y0: box.b, y1: box.t };
   const spec = ax.legend;
+  // Legend.set_bbox_to_anchor: Bbox.from_bounds(x, y, w, h) through BboxTransformTo(axes bbox), corner by corner
+  const anchorOf = (a: readonly [number, number, number, number]): Box => {
+    const aw = axesUp.x1 - axesUp.x0, ah = axesUp.y1 - axesUp.y0;
+    return { x0: a[0] * aw + axesUp.x0, y0: a[1] * ah + axesUp.y0, x1: (a[0] + a[2]) * aw + axesUp.x0, y1: (a[1] + a[3]) * ah + axesUp.y0 };
+  };
   const legend = spec.kind === 'on' && entries.length > 0
     ? some({ code: spec.loc, out: tracer.span('legend', { entries: entries.length }, () => layoutLegend({
         entries, theme, dpi, W, H, Hg, snap: f.snap, axesBox: axesUp, lines: drawn.flatMap((d) => d.lines), points: drawn.flatMap((d) => d.points), paths: drawn.flatMap((d) => d.paths), boxes: drawn.flatMap((d) => d.boxes),
-        loc: spec.loc, ncols: spec.ncols, frame: spec.frame, fontSizePt: spec.fontSizePt, markers: spec.markers }, tracer)) })
+        loc: spec.loc, ncols: spec.ncols, frame: spec.frame, fontSizePt: spec.fontSizePt, markers: spec.markers,
+        anchorBox: spec.anchor.kind === 'some' ? anchorOf(spec.anchor.value) : axesUp, borderAxesPad: spec.borderAxesPad }, tracer)) })
     : none;
 
   // Gridlines clip to the axes like every artist; each Axis draws as a unit (x, then y).

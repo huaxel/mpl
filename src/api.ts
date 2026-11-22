@@ -254,6 +254,15 @@ const pt = (v: unknown, what: string): readonly [number, number] => {
 const pick = (a: Float64Array, m: Uint8Array): Float64Array => a.filter((_, i) => m[i] === 1);
 const and = (a: Uint8Array, b: Uint8Array): Uint8Array => a.map((v, i) => (v === 1 && b[i] === 1 ? 1 : 0));
 const edgeOf = (p: Paint, lw: number): BarEdge => (p.kind === 'solid' && p.color.alpha > 0 && lw > 0 ? { kind: 'on', color: p.color, widthPt: lw } : { kind: 'none' });
+/** Legend.set_bbox_to_anchor: (x, y) or (x, y, width, height) in axes fractions. Any other shape is a TypeError, as
+ *  Bbox.from_bounds(*bbox) raises for the wrong number of values. */
+function bboxToAnchor(v: unknown): readonly [number, number, number, number] {
+  if (!Array.isArray(v) || (v.length !== 2 && v.length !== 4) || !v.every((x) => typeof x === 'number' && Number.isFinite(x))) {
+    throw new TypeError(`legend(): bbox_to_anchor must be [x, y] or [x, y, width, height] of finite numbers, got ${JSON.stringify(v)}`);
+  }
+  const n: readonly number[] = v.map(Number);
+  return n.length === 2 ? [n[0], n[1], 0, 0] : [n[0], n[1], n[2], n[3]];
+}
 /** A point (x, y), as matplotlib's xy tuples. */
 export type XY = readonly [number, number];
 const DATA_COORDS: LineCoords = { x: 'data', y: 'data' };
@@ -2350,7 +2359,8 @@ export class Axes {
     this.grid_ = { x: axis === 'y' ? cur.x : axisGrid(cur.x), y: axis === 'x' ? cur.y : axisGrid(cur.y) };
     return this;
   }
-  /** legend({ loc, ncols|ncol, frameon, fontsize, scatterpoints, scatteryoffsets, markerscale }) — entries come from artists with a label; a scatter's entry draws scatterpoints markers (rc legend.scatterpoints) sized from its sizes, and markerscale (rc legend.markerscale) scales every entry's markers. */
+  /** legend({ loc, bbox_to_anchor, borderaxespad, ncols|ncol, frameon, fontsize, scatterpoints, scatteryoffsets, markerscale }) — entries come from artists with a label; a scatter's entry draws scatterpoints markers (rc legend.scatterpoints) sized from its sizes, and markerscale (rc legend.markerscale) scales every entry's markers.
+   *  bbox_to_anchor is [x, y] or [x, y, width, height] in axes fractions: loc then places the legend's loc corner (or edge, or centre) at that point, or inside that box, borderaxespad (rc legend.borderaxespad, in font sizes) in from it; { loc: 'lower left', bbox_to_anchor: [0, 1.02], ncols: 3 } is a row above the axes, { loc: 'upper left', bbox_to_anchor: [1.02, 1], borderaxespad: 0 } a column to the right. */
   legend(kwargs: Kwargs = {}): this {
     arity('legend', arguments.length, 0, true);
     const L = this.theme.legend;
@@ -2368,6 +2378,8 @@ export class Axes {
           ? ok(v.map(Number)) : err('scatteryoffsets must be a non-empty list of numbers')), () => [3 / 8, 4 / 8, 2.5 / 8]),
         markerScale: kw.read(['markerscale'], (v) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? ok(v) : err('markerscale must be a number >= 0')), () => L.markerScale),
       },
+      anchor: ((a) => (a.kind === 'some' ? some(bboxToAnchor(a.value)) : none))(kw.get(['bbox_to_anchor'])),
+      borderAxesPad: kw.read(['borderaxespad'], (v) => (typeof v === 'number' && Number.isFinite(v) ? ok(v) : err('borderaxespad must be a finite number')), () => L.borderAxesPad),
     };
     kw.done();
     return this;

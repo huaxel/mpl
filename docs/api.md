@@ -476,9 +476,9 @@ Keyword arguments (unknown keys throw): `axis`, `which`, `color | c`, `linewidth
 
 ### `Axes.legend(kwargs?)`
 
-legend({ loc, ncols|ncol, frameon, fontsize, scatterpoints, scatteryoffsets, markerscale }) — entries come from artists with a label; a scatter's entry draws scatterpoints markers (rc legend.scatterpoints) sized from its sizes, and markerscale (rc legend.markerscale) scales every entry's markers.
+legend({ loc, bbox_to_anchor, borderaxespad, ncols|ncol, frameon, fontsize, scatterpoints, scatteryoffsets, markerscale }) — entries come from artists with a label; a scatter's entry draws scatterpoints markers (rc legend.scatterpoints) sized from its sizes, and markerscale (rc legend.markerscale) scales every entry's markers. bbox_to_anchor is [x, y] or [x, y, width, height] in axes fractions: loc then places the legend's loc corner (or edge, or centre) at that point, or inside that box, borderaxespad (rc legend.borderaxespad, in font sizes) in from it; { loc: 'lower left', bbox_to_anchor: [0, 1.02], ncols: 3 } is a row above the axes, { loc: 'upper left', bbox_to_anchor: [1.02, 1], borderaxespad: 0 } a column to the right.
 
-Keyword arguments (unknown keys throw): `loc`, `ncols | ncol`, `frameon`, `fontsize`, `scatterpoints`, `scatteryoffsets`, `markerscale`
+Keyword arguments (unknown keys throw): `loc`, `ncols | ncol`, `frameon`, `fontsize`, `scatterpoints`, `scatteryoffsets`, `markerscale`, `bbox_to_anchor`, `borderaxespad`
 
 ### `Axes.spec()`
 

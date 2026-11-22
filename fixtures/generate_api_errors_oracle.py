@@ -89,6 +89,10 @@ case("axvspan", [1, 2], {"linestyle": "zigzag"}, note="unknown linestyle")
 case("axhspan", [1, 2], {"ls": "--", "zorder": 0})
 case("bar", [[1, 2], [3, 4]], {"zorder": 3})
 
+# Issue #91: legend bbox_to_anchor is a 2- or 4-tuple
+case("legend", [], {"bbox_to_anchor": [0, 1.02], "loc": "lower left"})
+case("legend", [], {"bbox_to_anchor": [0, 1, 0.5]}, note="3 numbers")
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

@@ -85,6 +85,10 @@ export type LegendInput = {
   readonly snap: boolean;
   readonly axesBox: Box; readonly lines: readonly XY[]; readonly points: readonly XY[]; readonly paths: readonly XY[]; readonly boxes: readonly Box[];
   readonly loc: LegendLoc; readonly ncols: number; readonly frame: boolean; readonly fontSizePt: number; readonly markers: LegendMarkers;
+  /** Legend.get_bbox_to_anchor in display px (y up): the axes bbox, or bbox_to_anchor through BboxTransformTo(axes bbox) */
+  readonly anchorBox: Box;
+  /** borderaxespad, in fontsize units */
+  readonly borderAxesPad: number;
 };
 /** `entries[i]`: entry i's handle + label box (display, y up), in input order: what an interactive layer hit-tests. */
 export type LegendOutput = { readonly box: Box; readonly code: AnchorCode; readonly nodes: readonly Node[]; readonly entries: readonly Box[] };
@@ -96,7 +100,7 @@ function bestCode(inp: LegendInput, W: number, Hh: number, pad: number, tracer: 
     sp.setAttribute('cells', index.cells).setAttribute('segCells', index.segCells);
     let best: Option<{ readonly code: AnchorCode; readonly badness: number }> = none;
     for (const code of ANCHORS) {
-      const [l, b] = anchoredP0(code, W, Hh, inp.axesBox, pad);
+      const [l, b] = anchoredP0(code, W, Hh, inp.anchorBox, pad);
       const limit = best.kind === 'some' ? best.value.badness : Infinity;
       const badness = tracer.span('legend.candidate', { code }, (c) => { const v = index.badness(bb(l, b, l + W, b + Hh), limit); c.setAttribute('badness', v); return v; });
       if (best.kind === 'none' || badness < best.value.badness) best = some({ code, badness });
@@ -139,10 +143,10 @@ export function layoutLegend(inp: LegendInput, tracer: Tracer): LegendOutput {
   const legendPack = vpack([handlePack.bbox], L.labelSpacing * fsPt * k, 'center', L.borderPad * fsPt * k);
   const lb = legendPack.bbox, W = width(lb), Hh = height(lb);
 
-  // _findoffset
-  const pad = L.borderAxesPad * fs;
+  // _findoffset: _get_anchored_bbox(loc, bbox, get_bbox_to_anchor(), borderaxespad * fontsize)
+  const pad = inp.borderAxesPad * fs;
   const code: AnchorCode = inp.loc.kind === 'best' ? bestCode(inp, W, Hh, pad, tracer) : inp.loc.code;
-  const [l, b] = anchoredP0(code, W, Hh, inp.axesBox, pad);
+  const [l, b] = anchoredP0(code, W, Hh, inp.anchorBox, pad);
   const ox = l - lb.x0, oy = b - lb.y0;
   const box = bb(l, b, l + W, b + Hh);
 

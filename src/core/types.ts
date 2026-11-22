@@ -409,7 +409,11 @@ export type AnchorCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export type LegendLoc = { readonly kind: 'best' } | { readonly kind: 'anchored'; readonly code: AnchorCode };
 export type LegendSpec =
   | { readonly kind: 'off' }
-  | { readonly kind: 'on'; readonly loc: LegendLoc; readonly ncols: number; readonly frame: boolean; readonly fontSizePt: number; readonly markers: LegendMarkers };
+  | { readonly kind: 'on'; readonly loc: LegendLoc; readonly ncols: number; readonly frame: boolean; readonly fontSizePt: number; readonly markers: LegendMarkers;
+      /** bbox_to_anchor as Bbox.from_bounds(x, y, w, h) in axes fractions (an (x, y) pair has w = h = 0); none is the axes bbox */
+      readonly anchor: Option<readonly [number, number, number, number]>;
+      /** borderaxespad in fontsize units (rc legend.borderaxespad unless given) */
+      readonly borderAxesPad: number };
 /** Legend marker settings: scatterpoints and scatteryoffsets (HandlerPathCollection), markerscale (every handler's markers). */
 export type LegendMarkers = { readonly scatterPoints: number; readonly scatterYOffsets: readonly number[]; readonly markerScale: number };
 
