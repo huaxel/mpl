@@ -1020,6 +1020,16 @@ case("pie_label_grid", ("$subplots", [1, 2]),
      ("sca", [0]), ("pie", [[5, 3, 2]], {"labels": ["five", "three", "two"]}), ("pie_label", [{"$ret": 2}, "{frac:.0%}"], {"textprops": {"color": "w"}}),
      ("sca", [1]), ("pie", [[0.2, 0.3, 0.15]], {"normalize": False, "counterclock": False}), ("pie_label", [{"$ret": 5}, "{absval}"], {"distance": 1.1}))
 
+# Issue #86: matplotlib's optional positionals, bar(x, height, width, bottom) and barh(y, width, height, left);
+# fill_between's y2 also by keyword
+case("bar_positional_width_stacked", ("bar", [["a", "b"], [300, 500], 0.72], {"bottom": [0, 0], "label": "one"}),
+     ("bar", [["a", "b"], [200, 400], 0.72], {"bottom": [300, 500], "label": "two"}), ("legend", []))
+case("bar_positional_width_bottom", ("bar", [[1, 2, 3], [3, 1, 2], 0.5, [1, 0, 2]], {"color": "C2"}),
+     ("bar", [[1, 2, 3], [1, 1, 1], 0.25, [4, 1, 4]]))
+case("barh_positional_height_left", ("barh", [["x", "y", "z"], [3, 1, 2], 0.4, [1, 2, 0]], {"label": "h"}),
+     ("barh", [["x", "y", "z"], [1, 2, 1], 0.4], {"left": [4, 3, 2], "label": "left kw"}), ("legend", []))
+case("fill_between_y2_keyword", ("fill_between", [x, sx], {"y2": 0.5, "alpha": 0.5}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

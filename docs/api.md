@@ -302,23 +302,23 @@ pie_label(container, labels, { distance, textprops, rotate, alignment }) — Axe
 
 Keyword arguments (unknown keys throw): `distance`, `textprops`, `rotate`, `alignment`
 
-### `Axes.bar(x, height, kwargs?)`
+### `Axes.bar(x, height, ...rest)`
 
-bar(x, height, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — vertical bars.
+bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — vertical bars. width and bottom may come positionally, as in matplotlib's bar(x, height, width=0.8, bottom=None); a name given both ways, a third positional, or a non-object where the keyword object goes throws a TypeError.
 
 Keyword arguments (unknown keys throw): `width`, `bottom`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
 
-### `Axes.barh(y, width, kwargs?)`
+### `Axes.barh(y, width, ...rest)`
 
-barh(y, width, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — horizontal bars; `left` offsets each bar (Gantt and waterfall charts).
+barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). height and left may come positionally, as in matplotlib's barh(y, width, height=0.8, left=None), with bar()'s TypeErrors.
 
 Keyword arguments (unknown keys throw): `height`, `left`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
 
 ### `Axes.fill_between(xRaw, y1Raw, ...rest)`
 
-fill_between(x, y1, y2 = 0, { color, alpha, label }) — a FillBetweenPolyCollection with no edges.
+fill_between(x, y1, y2 = 0, { y2, color, alpha, label }) — a FillBetweenPolyCollection with no edges. A positional past y2, or y2 given both ways, throws a TypeError.
 
-Keyword arguments (unknown keys throw): `color`, `facecolor | fc`, `alpha`, `linewidth | lw`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `y2`, `color`, `facecolor | fc`, `alpha`, `linewidth | lw`, `label`, `clip_on | clipon | clip`
 
 ### `Axes.get transData()`
 

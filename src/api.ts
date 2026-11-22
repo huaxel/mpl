@@ -68,7 +68,12 @@ class KwReader {
   readonly kw: Kwargs;
   readonly fn: string;
   readonly used = new Set<string>();
-  constructor(kw: Kwargs, fn: string) { this.kw = kw; this.fn = fn; }
+  constructor(kw: Kwargs, fn: string) {
+    // a JS call's keyword arguments are one trailing plain object; anything else in that slot was meant for something else
+    // (bar(x, h, 0.5) means a positional width), and reading keys off it would ignore every one of them
+    if (!isPlainObject(kw)) throw new TypeError(`${fn}() keyword arguments must be a plain object, got ${describeArg(kw)}; pass optional arguments by name in one trailing object`);
+    this.kw = kw; this.fn = fn;
+  }
   get(names: readonly string[]): Option<unknown> {
     let found: Option<unknown> = none;
     for (const n of names) {
@@ -89,6 +94,49 @@ class KwReader {
     const extra = Object.keys(this.kw).filter((k) => !this.used.has(k));
     if (extra.length > 0) throw new TypeError(`${this.fn}() got an unexpected keyword argument '${extra[0]}'`);
   }
+}
+
+/** A value as an error message names it: its type, and the value when it is short. */
+const describeArg = (v: unknown): string => {
+  if (Array.isArray(v)) return `an array of length ${v.length}`;
+  if (isPlainObject(v)) return 'a plain object';
+  if (typeof v === 'object' && !isNullish(v)) return `a ${Object.prototype.toString.call(v).slice(8, -1)}`;   // [object Float64Array] → Float64Array
+  const j = typeof v === 'string' ? JSON.stringify(v) : String(v);
+  return `${typeof v} ${j.length > 40 ? `${j.slice(0, 40)}…` : j}`;
+};
+const plural = (n: number, one: string): string => `${n} ${one}${n === 1 ? '' : 's'}`;
+/**
+ * Python rejects a call with too many positional arguments; JS would drop the extras. `given` is arguments.length,
+ * `positional` the parameters before the keyword object, `kwargs` whether one trailing keyword object may follow.
+ */
+function arity(fn: string, given: number, positional: number, kwargs: boolean): void {
+  const max = positional + (kwargs ? 1 : 0);
+  if (given <= max) return;
+  const takes = kwargs ? `${plural(positional, 'positional argument')} and one keyword object` : plural(positional, 'argument');
+  throw new TypeError(`${fn}() takes ${takes}, but ${given} arguments were given${kwargs ? '; pass optional arguments by name in the trailing object' : ''}`);
+}
+/**
+ * matplotlib's optional positionals: bar(x, height, width, bottom, **kwargs) in JS is bar(x, height, ...rest), where `rest`
+ * holds up to `names.length` positionals (in `names` order) and then one optional keyword object. The positionals join
+ * the keywords under their names. A name given both ways, too many positionals, or a non-object in the keyword slot is a
+ * TypeError, as in Python. null/undefined positionals mean "not given", as None does.
+ */
+function bindPositional(fn: string, names: readonly string[], rest: readonly unknown[]): Kwargs {
+  const last = rest.length > 0 ? rest[rest.length - 1] : 0;
+  const hasKw = rest.length > 0 && isPlainObject(last);
+  const kw: Kwargs = hasKw && isPlainObject(last) ? last : {};
+  const pos = hasKw ? rest.slice(0, -1) : rest;
+  if (pos.length > names.length) {
+    throw new TypeError(`${fn}() takes at most ${plural(names.length, 'optional positional argument')} (${names.join(', ')}) and one keyword object, but got ${pos.length} positionals; the extra one is ${describeArg(pos[names.length])}`);
+  }
+  const out: Record<string, unknown> = { ...kw };
+  pos.forEach((v, i) => {
+    const name = names[i];
+    if (isNullish(v)) return;
+    if (prop(kw, name).kind === 'some' && !isNullish(kw[name])) throw new TypeError(`${fn}() got multiple values for argument '${name}'`);
+    out[name] = v;
+  });
+  return out;
 }
 
 // ---------------------------------------------------------------- data
@@ -533,6 +581,7 @@ export class Axis {
    * anything else throws. Unsupported formatter classes throw a typed TypeError.
    */
   set_major_formatter(fmt: unknown): this {
+    arity('Axis.set_major_formatter', arguments.length, 1, false);
     if (isPlainObject(fmt) && Object.prototype.hasOwnProperty.call(fmt, 'kind') && Reflect.get(fmt, 'kind') === 'auto') {
       this.formatter = { kind: 'auto' }; return this;
     }
@@ -549,6 +598,7 @@ export class Axis {
    * format from this locator's unit (Formatter._set_locator). It applies once the axis holds dates. Other locators throw.
    */
   set_major_locator(loc: unknown): this {
+    arity('Axis.set_major_locator', arguments.length, 1, false);
     if (!isDateLocator(loc)) {
       throw new TypeError('set_major_locator: unsupported locator; supported: AutoDateLocator, YearLocator, MonthLocator, DayLocator, HourLocator, MinuteLocator, SecondLocator');
     }
@@ -681,6 +731,7 @@ export class Axes {
   }
   /** A second Axes sharing this one's x axis, with its y axis on the right. */
   twinx(): Axes {
+    arity('twinx', arguments.length, 0, false);
     const host = this.fig.axes.indexOf(this);
     // _make_twin_axes: add_subplot(the host's SubplotSpec) when it has one, else add_axes(its position)
     const ss = subplotSpecOf(this.placement);
@@ -705,6 +756,7 @@ export class Axes {
    * Tick labels stay on the outer edge only; ticks are kept.
    */
   labelOuter(axis: 'x' | 'y'): void {
+    arity('labelOuter', arguments.length, 1, false);
     const ss = this.subplotspec;
     if (ss.kind === 'none') return;
     const { rows, cols, grid } = ss.value;
@@ -712,14 +764,15 @@ export class Axes {
     if (axis === 'y' && cols[0] !== 0) { this.ylabel = ''; this.hiddenLabels = { ...this.hiddenLabels, y: true }; }
   }
   /** set_xscale('linear' | 'log') */
-  set_xscale(s: unknown): this { this.xaxis.setScale(s); return this; }
+  set_xscale(s: unknown): this { arity('set_xscale', arguments.length, 1, false); this.xaxis.setScale(s); return this; }
   /** set_yscale('linear' | 'log') */
-  set_yscale(s: unknown): this { this.yaxis.setScale(s); return this; }
+  set_yscale(s: unknown): this { arity('set_yscale', arguments.length, 1, false); this.yaxis.setScale(s); return this; }
   /**
    * set_aspect('auto' | 'equal' | number) — data aspect ratio with adjustable='box' (matplotlib default
    * for set_aspect). The Axes box is shrunk and centred to match; 'equal' is ratio 1.
    */
   set_aspect(aspect: unknown): this {
+    arity('set_aspect', arguments.length, 1, false);
     if (aspect === 'auto') { this.aspect = { kind: 'auto' }; return this; }
     if (aspect === 'equal') { this.aspect = { kind: 'equal' }; return this; }
     if (typeof aspect === 'number' && Number.isFinite(aspect) && aspect > 0) { this.aspect = { kind: 'ratio', value: aspect }; return this; }
@@ -727,11 +780,13 @@ export class Axes {
   }
   /** set_box_aspect(aspect | null) — physical height/width of the Axes box (colorbar uses 20). */
   set_box_aspect(aspect: unknown): this {
+    arity('set_box_aspect', arguments.length, 1, false);
     if (typeof aspect === 'number' && Number.isFinite(aspect) && aspect > 0) { this.boxAspect = some(aspect); return this; }
     throw new Error(`set_box_aspect: aspect must be a positive number, got ${JSON.stringify(aspect)}`);
   }
   /** set_anchor(anchor) — 'C' or [x, y] in [0, 1]; where a shrunk box sits in the original position. */
   set_anchor(anchor: unknown): this {
+    arity('set_anchor', arguments.length, 1, false);
     if (anchor === 'C' || anchor === 'center') { this.anchorXY = [0.5, 0.5]; return this; }
     if (Array.isArray(anchor) && anchor.length === 2 && typeof anchor[0] === 'number' && typeof anchor[1] === 'number') {
       this.anchorXY = [Number(anchor[0]), Number(anchor[1])]; return this;
@@ -739,7 +794,7 @@ export class Axes {
     throw new Error(`set_anchor: expected 'C' or [x, y], got ${JSON.stringify(anchor)}`);
   }
   /** Replace this Axes' SubplotSpec and take its position (colorbar make_axes_gridspec). */
-  set_subplotspec(ss: SubplotSpec): void { this.placement = { kind: 'cell', cell: ss }; }
+  set_subplotspec(ss: SubplotSpec): void { arity('set_subplotspec', arguments.length, 1, false); this.placement = { kind: 'cell', cell: ss }; }
   private next(which: 'line' | 'patch'): Rgb {
     const c = this.theme.axes.cycle;
     return which === 'line' ? c[this.lineCycle++ % c.length] : c[this.patchCycle++ % c.length];
@@ -835,11 +890,13 @@ export class Axes {
 
   /** axhline(y = 0, { xmin = 0, xmax = 1, …Line2D }) — xmin/xmax are axes fractions. Autoscales y only when y is outside the current bounds. */
   axhline(y: unknown = 0, kwargs: Kwargs = {}): LineArtist {
+    arity('axhline', arguments.length, 1, true);
     const kw = this.refLineKw('axhline', isPlainObject(y) ? y : kwargs);
     return this.refLine(kw, 'axhline', isPlainObject(y) ? 0 : y, kw.read(['xmin'], num('xmin'), () => 0), kw.read(['xmax'], num('xmax'), () => 1));
   }
   /** axvline(x = 0, { ymin = 0, ymax = 1, …Line2D }) — ymin/ymax are axes fractions. Autoscales x only when x is outside the current bounds. */
   axvline(x: unknown = 0, kwargs: Kwargs = {}): LineArtist {
+    arity('axvline', arguments.length, 1, true);
     const kw = this.refLineKw('axvline', isPlainObject(x) ? x : kwargs);
     return this.refLine(kw, 'axvline', isPlainObject(x) ? 0 : x, kw.read(['ymin'], num('ymin'), () => 0), kw.read(['ymax'], num('ymax'), () => 1));
   }
@@ -870,6 +927,7 @@ export class Axes {
 
   /** axline(xy1, xy2) or axline(xy1, { slope }) — an infinite line through two points, or one point and a slope (linear scales only). */
   axline(xy1: XY, xy2OrKw: XY | Kwargs = {}, kwargs: Kwargs = {}): AxLineArtist {
+    arity('axline', arguments.length, 2, true);
     const xy2: Option<readonly [number, number]> = Array.isArray(xy2OrKw) ? some(pt(xy2OrKw, 'xy2')) : none;
     const kw = new KwReader(Array.isArray(xy2OrKw) ? kwargs : (isPlainObject(xy2OrKw) ? xy2OrKw : {}), 'axline');
     const slope = kw.read(['slope'], (v) => (typeof v === 'number' ? ok(some(v)) : err('slope must be a number')), (): Option<number> => none);
@@ -890,9 +948,9 @@ export class Axes {
   }
 
   /** hlines(y, xmin, xmax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of horizontal segments. */
-  hlines(y: unknown, xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SegmentsArtist { return this.lines('hlines', y, xmin, xmax, kwargs); }
+  hlines(y: unknown, xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SegmentsArtist { arity('hlines', arguments.length, 3, true); return this.lines('hlines', y, xmin, xmax, kwargs); }
   /** vlines(x, ymin, ymax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of vertical segments. */
-  vlines(x: unknown, ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SegmentsArtist { return this.lines('vlines', x, ymin, ymax, kwargs); }
+  vlines(x: unknown, ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SegmentsArtist { arity('vlines', arguments.length, 3, true); return this.lines('vlines', x, ymin, ymax, kwargs); }
 
   private lines(fn: 'hlines' | 'vlines', posRaw: unknown, loRaw: unknown, hiRaw: unknown, kwargs: Kwargs): SegmentsArtist {
     const kw = new KwReader(kwargs, fn);
@@ -941,6 +999,7 @@ export class Axes {
    * xlolims, xuplims, errorevery, label, …Line2D }) — errors are a scalar, one value per point, or [lower, upper].
    */
   errorbar(xRaw: unknown, yRaw: unknown, kwargs: Kwargs = {}): ErrorbarContainer {
+    arity('errorbar', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'errorbar');
     const xs = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const ys = this.yaxis.convert(unwrap(parseSeries(yRaw, 'y')));
@@ -1054,6 +1113,7 @@ export class Axes {
   hist(x: unknown): HistResult | HistResultMulti;
   hist(x: unknown, kwargs: Kwargs): HistResult | HistResultMulti;
   hist(xRaw: unknown, kwargs: Kwargs = {}): HistResult | HistResultMulti {
+    arity('hist', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'hist');
     const histtype = kw.read(['histtype'], oneOf('histtype', ['bar', 'barstacked', 'step', 'stepfilled']), (): HistType => 'bar');
     const align = kw.read(['align'], oneOf('align', ['left', 'mid', 'right']), (): 'left' | 'mid' | 'right' => 'mid');
@@ -1223,6 +1283,7 @@ export class Axes {
    * from `[1, 2]`, so all-integral float positions render like Python ints.
    */
   boxplot(xRaw: unknown, kwargs: Kwargs = {}): BoxplotResult {
+    arity('boxplot', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'boxplot');
     const T = this.theme.boxplot;
     // bootstrap: accepted only as null/undefined/'None' (off); any sample count is refused
@@ -1431,6 +1492,7 @@ export class Axes {
    * autopct is absent.
    */
   pie(xRaw: unknown, kwargs: Kwargs = {}): PieResult {
+    arity('pie', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'pie');
     const cycle = this.theme.axes.cycle;
     const explodeK = kw.read(['explode'], (v): Result<Option<Float64Array>> => {
@@ -1558,6 +1620,7 @@ export class Axes {
    * and autotexts are unchanged.
    */
   pie_label(container: PieResult, labels: unknown, kwargs: Kwargs = {}): readonly TextArtist[] {
+    arity('pie_label', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'pie_label');
     const distance = kw.read(['distance'], num('distance'), () => 0.6);
     const textprops = kw.read(['textprops'], (v) => (isNullish(v) ? ok({}) : propsDict('textprops')(v)), (): Kwargs => ({}));
@@ -1624,14 +1687,22 @@ export class Axes {
     return ok({ kind: 'edges', edges: axis.convert(s.value) });
   }
 
-  /** bar(x, height, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — vertical bars. */
-  bar(x: unknown, height: unknown, kwargs: Kwargs = {}): BarArtist {
-    const kw = new KwReader(kwargs, 'bar');
+  /**
+   * bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on })
+   * — vertical bars. width and bottom may come positionally, as in matplotlib's bar(x, height, width=0.8, bottom=None); a name
+   * given both ways, a third positional, or a non-object where the keyword object goes throws a TypeError.
+   */
+  bar(x: unknown, height: unknown, ...rest: readonly unknown[]): BarArtist {
+    const kw = new KwReader(bindPositional('bar', ['width', 'bottom'], rest), 'bar');
     return this.bars(kw, x, height, 'vertical', kw.get(['width']), kw.get(['bottom']));
   }
-  /** barh(y, width, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). */
-  barh(y: unknown, width: unknown, kwargs: Kwargs = {}): BarArtist {
-    const kw = new KwReader(kwargs, 'barh');
+  /**
+   * barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on })
+   * — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). height and left may come positionally, as in
+   * matplotlib's barh(y, width, height=0.8, left=None), with bar()'s TypeErrors.
+   */
+  barh(y: unknown, width: unknown, ...rest: readonly unknown[]): BarArtist {
+    const kw = new KwReader(bindPositional('barh', ['height', 'left'], rest), 'barh');
     return this.bars(kw, y, width, 'horizontal', kw.get(['height']), kw.get(['left']));
   }
 
@@ -1677,13 +1748,12 @@ export class Axes {
     return bar;
   }
 
-  /** fill_between(x, y1, y2 = 0, { color, alpha, label }) — a FillBetweenPolyCollection with no edges. */
+  /** fill_between(x, y1, y2 = 0, { y2, color, alpha, label }) — a FillBetweenPolyCollection with no edges. A positional past y2,
+   *  or y2 given both ways, throws a TypeError. */
   fill_between(xRaw: unknown, y1Raw: unknown, ...rest: readonly unknown[]): FillArtist {
-    // y2 is optional, so a trailing plain object is the kwargs, as in plot()
-    const tail = [...rest];
-    const kwRaw = tail.length > 0 && isPlainObject(tail[tail.length - 1]) ? tail.pop() : {};
-    const y2Raw = tail.length > 0 ? tail[0] : 0;
-    const kw = new KwReader(isPlainObject(kwRaw) ? kwRaw : {}, 'fill_between');
+    // y2 is optional, so a trailing plain object is the kwargs, as in plot(); y2 may also be a keyword, as in matplotlib
+    const kw = new KwReader(bindPositional('fill_between', ['y2'], rest), 'fill_between');
+    const y2Raw = kw.read(['y2'], (v): Result<unknown> => ok(v), (): unknown => 0);
     const x = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const n = x.length;
     const y1 = typeof y1Raw === 'number' ? new Float64Array(n).fill(y1Raw) : this.yaxis.convert(unwrap(parseSeries(y1Raw, 'y1')));
@@ -1716,6 +1786,7 @@ export class Axes {
 
   /** text(x, y, s, { transform, color, fontsize, ha, va }) — data coordinates unless transform: ax.transAxes. */
   text(xRaw: unknown, yRaw: unknown, s: unknown, kwargs: Kwargs = {}): TextArtist {
+    arity('text', arguments.length, 3, true);
     const kw = new KwReader(kwargs, 'text');
     const coords = kw.read(['transform'], (v): Result<TextCoords> => (isPlainObject(v) && prop(v, 'kind').kind === 'some' && (prop(v, 'coords').kind === 'some')
       ? parseCoords(prop(v, 'coords')) : err('transform must be ax.transData or ax.transAxes')), (): TextCoords => 'data');
@@ -1789,6 +1860,7 @@ export class Axes {
 
   /** annotate(text, xy, { xytext, xycoords, textcoords, arrowprops, ha, va, color, fontsize, fontweight, clip_on }) — coords are 'data' or '<figure|axes> <fraction|points|pixels|fontsize>', and textcoords may also be 'offset <points|pixels|fontsize>' from xy; either may be an [x, y] pair of systems, one per axis. In 'data' coordinates a value may be a Date or a category name. arrowprops without 'arrowstyle' take width, headwidth, headlength, shrink; with one ('-', '->', '-|>', '<-', '<->', '<|-', '<|-|>', ']-', '-[', ']-[', '|-|', ']->', '<-[', 'simple', 'fancy', 'wedge', each optionally ',key=value,...') they take connectionstyle ('arc3[,rad=r]'), relpos, shrinkA, shrinkB, mutation_scale and alpha; both take color, facecolor/fc, edgecolor/ec, linewidth/lw. */
   annotate(text: unknown, xy: unknown, kwargs: Kwargs = {}): AnnotationArtist {
+    arity('annotate', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'annotate');
     const xytextV = kw.get(['xytext']);
     const xycoords = kw.read(['xycoords'], (v) => parseAnnotationCoords(v, 'xycoords'), (): AnnotationCoordPair => ({ x: { kind: 'data' }, y: { kind: 'data' }, pair: false }));
@@ -1828,6 +1900,7 @@ export class Axes {
    * zoomed in, hanning when downsampling). Sets aspect to 'equal' unless overridden.
    */
   imshow(Z: unknown, kwargs: Kwargs = {}): ImageArtist {
+    arity('imshow', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'imshow');
     const { values, rows, cols, channels } = parseImageGrid(Z);
     const cmap = kw.read(['cmap'], parseColormap, () => unwrap(parseColormap('viridis')));
@@ -1883,6 +1956,7 @@ export class Axes {
    * — PathCollection. A numeric `c` array with `cmap` (default viridis) maps through Normalize(vmin, vmax).
    */
   scatter(xRaw: unknown, yRaw: unknown, kwargs: Kwargs = {}): ScatterArtist {
+    arity('scatter', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'scatter');
     const xs = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const ys = this.yaxis.convert(unwrap(parseSeries(yRaw, 'y')));
@@ -1960,6 +2034,7 @@ export class Axes {
 
   /** axvspan: vertical span in data x and axes-fraction y */
   axvspan(xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SpanArtist {
+    arity('axvspan', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'axvspan');
     const x0 = unwrap(parseSeries([xmin], 'xmin')); const x1 = unwrap(parseSeries([xmax], 'xmax'));
     const ymin = kw.read(['ymin'], num('ymin'), () => 0); const ymax = kw.read(['ymax'], num('ymax'), () => 1);
@@ -1982,6 +2057,7 @@ export class Axes {
   }
   /** axhspan: horizontal span in data y and axes-fraction x */
   axhspan(ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SpanArtist {
+    arity('axhspan', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'axhspan');
     const y0 = unwrap(parseSeries([ymin], 'ymin')); const y1 = unwrap(parseSeries([ymax], 'ymax'));
     const xmin = kw.read(['xmin'], num('xmin'), () => 0); const xmax = kw.read(['xmax'], num('xmax'), () => 1);
@@ -2010,6 +2086,7 @@ export class Axes {
    * axes.titlepad) moves every title; `y` is the baseline in axes fractions (default 1, the top).
    */
   set_title(s: unknown, kwargs: Kwargs = {}): this {
+    arity('set_title', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'set_title');
     const loc = kw.read(['loc'], parseHAlign, () => this.theme.axes.titleLoc);
     const padPt = kw.read(['pad'], num('pad'), () => this.theme.axes.titlePadPt);
@@ -2036,6 +2113,7 @@ export class Axes {
   }
   /** get_title(loc = 'center') — the text of one of the three titles ('' when unset). */
   get_title(loc: unknown = 'center'): string {
+    arity('get_title', arguments.length, 1, false);
     return this.titles[unwrap(parseHAlign(loc))].text;
   }
   /**
@@ -2058,6 +2136,7 @@ export class Axes {
   }
   /** Tick parameters: axis {'x','y','both'}, which {'major','minor','both'}, length, width, colors, labelsize, bottom/top/left/right, labelbottom/labelleft, pad, direction. */
   tick_params(kwargs: Kwargs = {}): this {
+    arity('tick_params', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'tick_params');
     const axis = kw.read(['axis'], (v): Result<'both' | 'x' | 'y'> => (v === 'both' || v === 'x' || v === 'y' ? ok(v) : err(`axis must be 'both', 'x' or 'y'`)), () => 'both');
     kw.read(['which'], (v): Result<'both' | 'major' | 'minor'> => (v === 'both' || v === 'major' || v === 'minor' ? ok(v) : err(`which must be 'both'|'major'|'minor'`)), () => 'both');
@@ -2091,39 +2170,39 @@ export class Axes {
     return this;
   }
   /** set_xlabel(s) — x axis label; '\n' starts a new line. */
-  set_xlabel(s: unknown): this { this.xlabel = str(s); return this; }
+  set_xlabel(s: unknown): this { arity('set_xlabel', arguments.length, 1, false); this.xlabel = str(s); return this; }
   /** set_ylabel(s) — y axis label, rotated 90°; '\n' starts a new line. */
-  set_ylabel(s: unknown): this { this.ylabel = str(s); return this; }
+  set_ylabel(s: unknown): this { arity('set_ylabel', arguments.length, 1, false); this.ylabel = str(s); return this; }
   /** set_xlim(lo, hi) or set_xlim([lo, hi]); lo > hi inverts the axis. */
   set_xlim(...args: readonly unknown[]): this { this.xaxis.setLimits(args, 'set_xlim'); return this; }
   /** set_ylim(lo, hi) or set_ylim([lo, hi]); lo > hi inverts the axis (top-down Gantt rows). */
   set_ylim(...args: readonly unknown[]): this { this.yaxis.setLimits(args, 'set_ylim'); return this; }
   /** invert_xaxis(): Axis.set_inverted(!get_inverted()). Swaps the view limits; an autoscaled axis stays autoscaled and inverted. */
-  invert_xaxis(): this { return this.set_xinverted(!this.get_xinverted()); }
+  invert_xaxis(): this { arity('invert_xaxis', arguments.length, 0, false); return this.set_xinverted(!this.get_xinverted()); }
   /** invert_yaxis(): Axis.set_inverted(!get_inverted()), e.g. top-down rows. An autoscaled axis stays autoscaled and inverted. */
-  invert_yaxis(): this { return this.set_yinverted(!this.get_yinverted()); }
+  invert_yaxis(): this { arity('invert_yaxis', arguments.length, 0, false); return this.set_yinverted(!this.get_yinverted()); }
   /** set_xinverted(inverted): the x view limits sorted high to low (true) or low to high (false). */
-  set_xinverted(inverted: unknown): this { this.settle(); this.xaxis.setInverted(unwrap(bool('inverted')(inverted))); return this; }
+  set_xinverted(inverted: unknown): this { arity('set_xinverted', arguments.length, 1, false); this.settle(); this.xaxis.setInverted(unwrap(bool('inverted')(inverted))); return this; }
   /** set_yinverted(inverted): the y view limits sorted high to low (true) or low to high (false). */
-  set_yinverted(inverted: unknown): this { this.settle(); this.yaxis.setInverted(unwrap(bool('inverted')(inverted))); return this; }
+  set_yinverted(inverted: unknown): this { arity('set_yinverted', arguments.length, 1, false); this.settle(); this.yaxis.setInverted(unwrap(bool('inverted')(inverted))); return this; }
   /** get_xinverted() / xaxis_inverted(): whether the x view limits run high to low. */
-  get_xinverted(): boolean { this.settle(); return this.xaxis.inverted(); }
+  get_xinverted(): boolean { arity('get_xinverted', arguments.length, 0, false); this.settle(); return this.xaxis.inverted(); }
   /** get_yinverted() / yaxis_inverted(): whether the y view limits run high to low. */
-  get_yinverted(): boolean { this.settle(); return this.yaxis.inverted(); }
-  xaxis_inverted(): boolean { return this.get_xinverted(); }
-  yaxis_inverted(): boolean { return this.get_yinverted(); }
+  get_yinverted(): boolean { arity('get_yinverted', arguments.length, 0, false); this.settle(); return this.yaxis.inverted(); }
+  xaxis_inverted(): boolean { arity('xaxis_inverted', arguments.length, 0, false); return this.get_xinverted(); }
+  yaxis_inverted(): boolean { arity('yaxis_inverted', arguments.length, 0, false); return this.get_yinverted(); }
   /** set_xticks(locs) — fixed major tick locations. */
-  set_xticks(t: unknown): this { this.xaxis.ticks = fixedTicks(t); return this; }
+  set_xticks(t: unknown): this { arity('set_xticks', arguments.length, 1, false); this.xaxis.ticks = fixedTicks(t); return this; }
   /** set_yticks(locs) — fixed major tick locations. */
-  set_yticks(t: unknown): this { this.yaxis.ticks = fixedTicks(t); return this; }
+  set_yticks(t: unknown): this { arity('set_yticks', arguments.length, 1, false); this.yaxis.ticks = fixedTicks(t); return this; }
   /** set_xticklabels(labels, { color|c, fontsize|size, fontweight|weight }): the kwargs style every label set here. */
-  set_xticklabels(l: unknown, kwargs: Kwargs = {}): this { return this.setTickLabels('x', l, kwargs, 'set_xticklabels'); }
+  set_xticklabels(l: unknown, kwargs: Kwargs = {}): this { arity('set_xticklabels', arguments.length, 1, true); return this.setTickLabels('x', l, kwargs, 'set_xticklabels'); }
   /** set_yticklabels(labels, { color|c, fontsize|size, fontweight|weight }): the kwargs style every label set here. */
-  set_yticklabels(l: unknown, kwargs: Kwargs = {}): this { return this.setTickLabels('y', l, kwargs, 'set_yticklabels'); }
+  set_yticklabels(l: unknown, kwargs: Kwargs = {}): this { arity('set_yticklabels', arguments.length, 1, true); return this.setTickLabels('y', l, kwargs, 'set_yticklabels'); }
   /** The major tick labels as Text handles: get_text(), set_fontweight(), set_color(), set_fontsize(). */
-  get_xticklabels(): readonly TickLabelText[] { return this.tickLabelHandles('x'); }
+  get_xticklabels(): readonly TickLabelText[] { arity('get_xticklabels', arguments.length, 0, false); return this.tickLabelHandles('x'); }
   /** The major y tick labels as Text handles (see get_xticklabels). */
-  get_yticklabels(): readonly TickLabelText[] { return this.tickLabelHandles('y'); }
+  get_yticklabels(): readonly TickLabelText[] { arity('get_yticklabels', arguments.length, 0, false); return this.tickLabelHandles('y'); }
   private labelStyles: { x: TickLabelStyles; y: TickLabelStyles } = { x: [], y: [] };
   private setTickLabels(a: 'x' | 'y', l: unknown, kwargs: Kwargs, fn: string): this {
     const labels = fixedLabels(l);
@@ -2193,6 +2272,7 @@ export class Axes {
    *  stick to the chosen axes and tick families (major, minor) for later grid() calls. A kwargs object
    *  alone, grid({ ... }), is grid(null, { ... }). */
   grid(visible: unknown = true, kwargs: Kwargs = {}): this {
+    arity('grid', arguments.length, 1, true);
     // visible: a bool sets it; null/undefined (or a lone kwargs object) is matplotlib's None
     const bare = isPlainObject(visible);
     const kw = new KwReader(bare ? visible : kwargs, 'grid');
@@ -2226,6 +2306,7 @@ export class Axes {
   }
   /** legend({ loc, ncols|ncol, frameon, fontsize, scatterpoints, scatteryoffsets, markerscale }) — entries come from artists with a label; a scatter's entry draws scatterpoints markers (rc legend.scatterpoints) sized from its sizes, and markerscale (rc legend.markerscale) scales every entry's markers. */
   legend(kwargs: Kwargs = {}): this {
+    arity('legend', arguments.length, 0, true);
     const L = this.theme.legend;
     const kw = new KwReader(kwargs, 'legend');
     this.legendSpec = {
@@ -2247,6 +2328,7 @@ export class Axes {
   }
   /** The Axes as plain data (what layout consumes); mostly for tooling and tests. */
   spec(): AxesSpec {
+    arity('spec', arguments.length, 0, false);
     return {
       role: this.role, position: this.position, artists: [...this.artists], titles: this.titles, xlabel: this.xlabel, ylabel: this.ylabel,
       x: this.xaxis.spec(), y: this.yaxis.spec(), grid: this.grid_, legend: this.legendSpec, aspect: this.aspect, boxAspect: this.boxAspect, anchor: this.anchorXY, colorbarExtend: this.colorbarExtend,
@@ -2622,6 +2704,7 @@ export class Colorbar {
     }
   }
   set_label(s: unknown): this {
+    arity('Colorbar.set_label', arguments.length, 1, false);
     if (this.orientation === 'vertical') this.ax.set_ylabel(s);
     else this.ax.set_xlabel(s);
     return this;
@@ -2662,11 +2745,13 @@ export class Figure {
   }
   /** add_subplot() — one Axes filling a 1x1 GridSpec, placed by the subplot parameters. */
   add_subplot(): Axes {
+    arity('Figure.add_subplot', arguments.length, 0, false);
     const grid: GridSpec = gridSpec(1, 1, [1], [1], NO_OVERRIDES);
     return this.addCell({ grid, rows: [0, 1], cols: [0, 1] }, none, none);
   }
   /** fig.add_axes(rect): an Axes at a fixed [left, bottom, right, top] with no SubplotSpec (make_axes cax). */
   addAxesAt(pos: Position, role: AxesRole = { kind: 'primary' }): Axes {
+    arity('Figure.addAxesAt', arguments.length, 2, false);
     const ax = new Axes(this, role, { kind: 'free', pos }, new Axis(), new Axis());
     this.axes.push(ax);
     this.touch();
@@ -2674,6 +2759,7 @@ export class Figure {
   }
   /** Add an Axes for a free SubplotSpec (colorbar cax). */
   addAxesFromSpec(cell: SubplotSpec, role: AxesRole = { kind: 'primary' }): Axes {
+    arity('Figure.addAxesFromSpec', arguments.length, 2, false);
     const ax = new Axes(this, role, { kind: 'cell', cell }, new Axis(), new Axis());
     this.axes.push(ax);
     this.touch();
@@ -2689,6 +2775,7 @@ export class Figure {
    * and a later subplots_adjust or tight_layout puts the listed Axes back on their SubplotSpecs, as in matplotlib.
    */
   colorbar(mappable: unknown, kwargs: Kwargs = {}): Colorbar {
+    arity('Figure.colorbar', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'Figure.colorbar');
     const axKw = kw.read(['ax'], colorbarParents, (): ColorbarParents => {
       if (isArtist(mappable)) {
@@ -2781,6 +2868,7 @@ export class Figure {
    * Returns every Axes as rows; subplots() applies squeeze.
    */
   subplots(nrows: number, ncols: number, kwargs: Kwargs = {}): readonly (readonly Axes[])[] {
+    arity('Figure.subplots', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'Figure.subplots');
     const sharex = kw.read(['sharex'], parseShare('sharex'), (): Share => 'none');
     const sharey = kw.read(['sharey'], parseShare('sharey'), (): Share => 'none');
@@ -2821,6 +2909,7 @@ export class Figure {
   private touch(): void { this._layoutCache = { agg: none, svg: none }; }
   /** Figure-level text in figure coordinates (0..1). */
   text(x: unknown, y: unknown, s: unknown, kwargs: Kwargs = {}): this {
+    arity('Figure.text', arguments.length, 3, true);
     const kw = new KwReader(kwargs, 'Figure.text');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
     const sizePt = kw.read(['fontsize', 'size'], (v) => parseFontSize(v, this.theme.font.sizePt), () => this.theme.font.sizePt);
@@ -2833,6 +2922,7 @@ export class Figure {
   }
   /** suptitle(s, { color|c, fontsize|size, fontweight|weight }) — centred figure title (figure.titlesize/titleweight). */
   suptitle(s: unknown, kwargs: Kwargs = {}): this {
+    arity('Figure.suptitle', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'Figure.suptitle');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
     const sizePt = kw.read(['fontsize', 'size'], (v) => parseFontSize(v, this.theme.font.sizePt), () => this.theme.figure.titleSizePt);
@@ -2844,6 +2934,7 @@ export class Figure {
   }
   /** supxlabel(s, { color|c, fontsize|size, fontweight|weight }) — figure-level x label at the bottom. */
   supxlabel(s: unknown, kwargs: Kwargs = {}): this {
+    arity('Figure.supxlabel', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'Figure.supxlabel');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
     const sizePt = kw.read(['fontsize', 'size'], (v) => parseFontSize(v, this.theme.font.sizePt), () => this.theme.figure.labelSizePt);
@@ -2855,6 +2946,7 @@ export class Figure {
   }
   /** supylabel(s, { color|c, fontsize|size, fontweight|weight }) — figure-level y label at the left, rotated. */
   supylabel(s: unknown, kwargs: Kwargs = {}): this {
+    arity('Figure.supylabel', arguments.length, 1, true);
     const kw = new KwReader(kwargs, 'Figure.supylabel');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
     const sizePt = kw.read(['fontsize', 'size'], (v) => parseFontSize(v, this.theme.font.sizePt), () => this.theme.figure.labelSizePt);
@@ -2869,6 +2961,7 @@ export class Figure {
    * kept; every Axes moves to its SubplotSpec's new position (a gridspec_kw value still wins for its grid).
    */
   subplots_adjust(kwargs: Kwargs = {}): this {
+    arity('Figure.subplots_adjust', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'Figure.subplots_adjust');
     const p = this.subplotpars;
     const next: SubplotParams = {
@@ -2892,6 +2985,7 @@ export class Figure {
    * are not yet supported and throw.
    */
   autofmt_xdate(kwargs: Kwargs = {}): this {
+    arity('Figure.autofmt_xdate', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'Figure.autofmt_xdate');
     const bottom = kw.read(['bottom'], num('bottom'), () => 0.2);
     const rotation = kw.read(['rotation'], (v) => (typeof v === 'number' && Number.isFinite(v) ? ok(v) : err('rotation must be a finite number')), () => 30);
@@ -2939,6 +3033,7 @@ export class Figure {
    *  where they are, with matplotlib's warning. As in matplotlib it runs once, at call time: call it after
    *  the plot is complete. */
   tight_layout(kwargs: Kwargs = {}): this {
+    arity('Figure.tight_layout', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'Figure.tight_layout');
     const pad = kw.read(['pad'], num('pad'), () => 1.08);
     // h_pad / w_pad: the gap between cells, in font sizes (default: pad)
@@ -3045,7 +3140,7 @@ export class Figure {
     return some({ left, bottom, right: 1 - right, top: 1 - top, wspace, hspace });
   }
   /** Run layout; one trace per run. */
-  toScene(): Scene { return this.sceneFor('agg'); }
+  toScene(): Scene { arity('Figure.toScene', arguments.length, 0, false); return this.sceneFor('agg'); }
   /** The scene for a device ('agg' rasterizes, 'svg' writes SVG), cached per device by a FigureSpec snapshot. */
   private sceneFor(dev: Device): Scene {
     // Cache by a FigureSpec snapshot: typed arrays are copied, not serialized. One walk compares and re-snapshots,
@@ -3095,6 +3190,7 @@ export class Figure {
    * idPrefix (default '') prefixes every element id, so several SVGs can be inlined in one HTML page.
    */
   toSVG(kwargs: Kwargs = {}): string {
+    arity('Figure.toSVG', arguments.length, 0, true);
     const o = this.svgOptions(kwargs, 'toSVG');
     const scene = this.sceneFor('svg');
     return tracer.span('render.svg', { topNodes: scene.nodes.length }, (sp) => {
@@ -3104,9 +3200,9 @@ export class Figure {
     });
   }
   /** svgChunks({ precision, interactive, idPrefix }) — the SVG as a generator of string chunks (keywords as in toSVG). */
-  svgChunks(kwargs: Kwargs = {}): Generator<string> { const o = this.svgOptions(kwargs, 'svgChunks'); return svgChunks(this.sceneFor('svg'), tracer, this.theme.svgText, o.prefix, o.pd, o.annot); }
+  svgChunks(kwargs: Kwargs = {}): Generator<string> { arity('Figure.svgChunks', arguments.length, 0, true); const o = this.svgOptions(kwargs, 'svgChunks'); return svgChunks(this.sceneFor('svg'), tracer, this.theme.svgText, o.prefix, o.pd, o.annot); }
   /** svgStream({ precision, interactive, idPrefix }) — the SVG as a byte stream (Workers, browsers, Node; keywords as in toSVG). */
-  svgStream(kwargs: Kwargs = {}): ReadableStream<Uint8Array> { const o = this.svgOptions(kwargs, 'svgStream'); return svgStream(this.sceneFor('svg'), tracer, this.theme.svgText, o.prefix, o.pd, o.annot); }
+  svgStream(kwargs: Kwargs = {}): ReadableStream<Uint8Array> { arity('Figure.svgStream', arguments.length, 0, true); const o = this.svgOptions(kwargs, 'svgStream'); return svgStream(this.sceneFor('svg'), tracer, this.theme.svgText, o.prefix, o.pd, o.annot); }
 
   /**
    * Layout at a savefig dpi (matplotlib Figure.savefig(dpi=…)). Default is this.dpi
@@ -3145,6 +3241,7 @@ export class Figure {
    * otherwise a new canvas is returned. Without out, every call returns a new canvas that nothing else touches.
    */
   toRGBA(kwargs: Kwargs = {}): Canvas {
+    arity('Figure.toRGBA', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'toRGBA');
     const dpi = this.saveDpi(kw, 'toRGBA');
     const out = kw.read(['out'], (v): Result<Option<Canvas>> => { const c = parseCanvas(v); return c.ok ? ok(some(c.value)) : err(c.error); }, (): Option<Canvas> => none);
@@ -3158,6 +3255,7 @@ export class Figure {
    * (default: figure dpi); scale is a convenience for dpi = figure.dpi × scale. Writes pHYs like Agg.
    */
   toPNG(kwargs: Kwargs = {}): Promise<Uint8Array> {
+    arity('Figure.toPNG', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'toPNG');
     const colors = kw.read(['colors'], paletteColors, (): Option<number> => none);
     const dpi = this.saveDpi(kw, 'toPNG');
@@ -3170,6 +3268,7 @@ export class Figure {
    * pixel-for-pixel, including the pHYs chunk.
    */
   toPNGSync(kwargs: Kwargs = {}): Uint8Array {
+    arity('Figure.toPNGSync', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'toPNGSync');
     const colors = kw.read(['colors'], paletteColors, (): Option<number> => none);
     const level = kw.read(['level'], (v): Result<Option<number>> => (Number.isInteger(v) && Number(v) >= 1 && Number(v) <= 9 ? ok(some(Number(v))) : err('level must be an integer in 1..9')), (): Option<number> => none);
@@ -3181,6 +3280,7 @@ export class Figure {
   }
   /** pngStream({ colors, dpi, scale }) — PNG as a byte stream; dpi/scale as in toPNG. */
   pngStream(kwargs: Kwargs = {}): ReadableStream<Uint8Array> {
+    arity('Figure.pngStream', arguments.length, 0, true);
     const kw = new KwReader(kwargs, 'pngStream');
     const colors = kw.read(['colors'], paletteColors, (): Option<number> => none);
     const dpi = this.saveDpi(kw, 'pngStream');

@@ -1,0 +1,1078 @@
+{
+ "matplotlib": "3.11.2",
+ "cases": [
+  {
+   "call": [
+    "axhline",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axhline() takes from 1 to 4 positional arguments but 5 were given",
+   "note": "axhline(y, xmin, xmax): one positional too many"
+  },
+  {
+   "call": [
+    "axvline",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axvline() takes from 1 to 4 positional arguments but 5 were given",
+   "note": "axvline(x, ymin, ymax): one positional too many"
+  },
+  {
+   "call": [
+    "axline",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axline() takes from 2 to 3 positional arguments but 4 were given",
+   "note": "axline(xy1, xy2): one positional too many"
+  },
+  {
+   "call": [
+    "hlines",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.hlines() takes from 4 to 7 positional arguments but 8 were given",
+   "note": "hlines(y, xmin, xmax, colors, linestyles, label): one positional too many"
+  },
+  {
+   "call": [
+    "vlines",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.vlines() takes from 4 to 7 positional arguments but 8 were given",
+   "note": "vlines(x, ymin, ymax, colors, linestyles, label): one positional too many"
+  },
+  {
+   "call": [
+    "errorbar",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.errorbar() takes from 3 to 17 positional arguments but 18 were given",
+   "note": "errorbar(x, y, yerr, xerr, fmt, ecolor, elinewidth, capsize, barsabove, lolims, uplims, xlolims, xuplims, errorevery, capthick, elinestyle): one positional too many"
+  },
+  {
+   "call": [
+    "hist",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.hist() takes from 2 to 16 positional arguments but 17 were given",
+   "note": "hist(x, bins, range, density, weights, cumulative, bottom, histtype, align, orientation, rwidth, log, color, label, stacked): one positional too many"
+  },
+  {
+   "call": [
+    "boxplot",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.boxplot() takes from 2 to 30 positional arguments but 31 were given",
+   "note": "boxplot(x, notch, sym, vert, orientation, whis, positions, widths, patch_artist, bootstrap, usermedians, conf_intervals, meanline, showmeans, showcaps, showbox, showfliers, boxprops, tick_labels, flierprops, medianprops, meanprops, capprops, whiskerprops, manage_ticks, autorange, zorder, capwidths, label): one positional too many"
+  },
+  {
+   "call": [
+    "pie",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.pie() takes from 2 to 17 positional arguments but 18 were given",
+   "note": "pie(x, explode, labels, colors, autopct, pctdistance, shadow, labeldistance, startangle, radius, counterclock, wedgeprops, textprops, center, frame, rotatelabels): one positional too many"
+  },
+  {
+   "call": [
+    "bar",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.bar() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "bar(x, height, width, bottom): one positional too many"
+  },
+  {
+   "call": [
+    "barh",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.barh() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "barh(y, width, height, left): one positional too many"
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.fill_between() takes from 3 to 7 positional arguments but 8 were given",
+   "note": "fill_between(x, y1, y2, where, interpolate, step): one positional too many"
+  },
+  {
+   "call": [
+    "text",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.text() takes from 4 to 5 positional arguments but 6 were given",
+   "note": "text(x, y, s, fontdict): one positional too many"
+  },
+  {
+   "call": [
+    "annotate",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.annotate() takes from 3 to 8 positional arguments but 9 were given",
+   "note": "annotate(text, xy, xytext, xycoords, textcoords, arrowprops, annotation_clip): one positional too many"
+  },
+  {
+   "call": [
+    "imshow",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.imshow() takes from 2 to 4 positional arguments but 5 were given",
+   "note": "imshow(X, cmap, norm): one positional too many"
+  },
+  {
+   "call": [
+    "scatter",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.scatter() takes from 3 to 12 positional arguments but 13 were given",
+   "note": "scatter(x, y, s, c, marker, cmap, norm, vmin, vmax, alpha, linewidths): one positional too many"
+  },
+  {
+   "call": [
+    "axvspan",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axvspan() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "axvspan(xmin, xmax, ymin, ymax): one positional too many"
+  },
+  {
+   "call": [
+    "axhspan",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axhspan() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "axhspan(ymin, ymax, xmin, xmax): one positional too many"
+  },
+  {
+   "call": [
+    "set_title",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.set_title() takes from 2 to 5 positional arguments but 6 were given",
+   "note": "set_title(label, fontdict, loc, pad): one positional too many"
+  },
+  {
+   "call": [
+    "get_title",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.get_title() takes from 1 to 2 positional arguments but 3 were given",
+   "note": "get_title(loc): one positional too many"
+  },
+  {
+   "call": [
+    "tick_params",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.tick_params() takes from 1 to 2 positional arguments but 3 were given",
+   "note": "tick_params(axis): one positional too many"
+  },
+  {
+   "call": [
+    "set_xlabel",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_xlabel() takes from 2 to 4 positional arguments but 5 were given",
+   "note": "set_xlabel(xlabel, fontdict, labelpad): one positional too many"
+  },
+  {
+   "call": [
+    "set_ylabel",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_ylabel() takes from 2 to 4 positional arguments but 5 were given",
+   "note": "set_ylabel(ylabel, fontdict, labelpad): one positional too many"
+  },
+  {
+   "call": [
+    "set_xticks",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticks() takes from 2 to 3 positional arguments but 4 were given",
+   "note": "set_xticks(ticks, labels): one positional too many"
+  },
+  {
+   "call": [
+    "set_yticks",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticks() takes from 2 to 3 positional arguments but 4 were given",
+   "note": "set_yticks(ticks, labels): one positional too many"
+  },
+  {
+   "call": [
+    "set_xticklabels",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticklabels() takes 2 positional arguments but 3 were given",
+   "note": "set_xticklabels(labels): one positional too many"
+  },
+  {
+   "call": [
+    "set_yticklabels",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_ticklabels() takes 2 positional arguments but 3 were given",
+   "note": "set_yticklabels(labels): one positional too many"
+  },
+  {
+   "call": [
+    "grid",
+    [
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.grid() takes from 1 to 4 positional arguments but 5 were given",
+   "note": "grid(visible, which, axis): one positional too many"
+  },
+  {
+   "call": [
+    "set_xscale",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis._set_axes_scale() takes 2 positional arguments but 3 were given",
+   "note": "set_xscale(value): one positional too many"
+  },
+  {
+   "call": [
+    "set_yscale",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis._set_axes_scale() takes 2 positional arguments but 3 were given",
+   "note": "set_yscale(value): one positional too many"
+  },
+  {
+   "call": [
+    "set_aspect",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_aspect() takes from 2 to 5 positional arguments but 6 were given",
+   "note": "set_aspect(aspect, adjustable, anchor, share): one positional too many"
+  },
+  {
+   "call": [
+    "set_box_aspect",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_box_aspect() takes from 1 to 2 positional arguments but 3 were given",
+   "note": "set_box_aspect(aspect): one positional too many"
+  },
+  {
+   "call": [
+    "set_anchor",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_anchor() takes from 2 to 3 positional arguments but 4 were given",
+   "note": "set_anchor(anchor, share): one positional too many"
+  },
+  {
+   "call": [
+    "set_xinverted",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_inverted() takes 2 positional arguments but 3 were given",
+   "note": "set_xinverted(inverted): one positional too many"
+  },
+  {
+   "call": [
+    "set_yinverted",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.set_inverted() takes 2 positional arguments but 3 were given",
+   "note": "set_yinverted(inverted): one positional too many"
+  },
+  {
+   "call": [
+    "invert_xaxis",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.invert_xaxis() takes 1 positional argument but 2 were given",
+   "note": "invert_xaxis(): one positional too many"
+  },
+  {
+   "call": [
+    "invert_yaxis",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.invert_yaxis() takes 1 positional argument but 2 were given",
+   "note": "invert_yaxis(): one positional too many"
+  },
+  {
+   "call": [
+    "get_xinverted",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_inverted() takes 1 positional argument but 2 were given",
+   "note": "get_xinverted(): one positional too many"
+  },
+  {
+   "call": [
+    "get_yinverted",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_inverted() takes 1 positional argument but 2 were given",
+   "note": "get_yinverted(): one positional too many"
+  },
+  {
+   "call": [
+    "xaxis_inverted",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_inverted() takes 1 positional argument but 2 were given",
+   "note": "xaxis_inverted(): one positional too many"
+  },
+  {
+   "call": [
+    "yaxis_inverted",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_inverted() takes 1 positional argument but 2 were given",
+   "note": "yaxis_inverted(): one positional too many"
+  },
+  {
+   "call": [
+    "get_xticklabels",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_ticklabels() takes from 1 to 3 positional arguments but 4 were given",
+   "note": "get_xticklabels(minor, which): one positional too many"
+  },
+  {
+   "call": [
+    "get_yticklabels",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axis.get_ticklabels() takes from 1 to 3 positional arguments but 4 were given",
+   "note": "get_yticklabels(minor, which): one positional too many"
+  },
+  {
+   "call": [
+    "twinx",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.twinx() takes from 1 to 2 positional arguments but 3 were given",
+   "note": "twinx(axes_class): one positional too many"
+  },
+  {
+   "call": [
+    "fig.colorbar",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.colorbar() takes from 2 to 5 positional arguments but 6 were given",
+   "note": "fig.colorbar(mappable, cax, ax, use_gridspec): one positional too many"
+  },
+  {
+   "call": [
+    "fig.subplots",
+    [
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.subplots() takes from 1 to 3 positional arguments but 4 were given",
+   "note": "fig.subplots(nrows, ncols): one positional too many"
+  },
+  {
+   "call": [
+    "fig.text",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.text() takes from 4 to 5 positional arguments but 6 were given",
+   "note": "fig.text(x, y, s, fontdict): one positional too many"
+  },
+  {
+   "call": [
+    "fig.suptitle",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.suptitle() takes 2 positional arguments but 3 were given",
+   "note": "fig.suptitle(t): one positional too many"
+  },
+  {
+   "call": [
+    "fig.supxlabel",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.supxlabel() takes 2 positional arguments but 3 were given",
+   "note": "fig.supxlabel(t): one positional too many"
+  },
+  {
+   "call": [
+    "fig.supylabel",
+    [
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.supylabel() takes 2 positional arguments but 3 were given",
+   "note": "fig.supylabel(t): one positional too many"
+  },
+  {
+   "call": [
+    "fig.subplots_adjust",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.subplots_adjust() takes from 1 to 7 positional arguments but 8 were given",
+   "note": "fig.subplots_adjust(left, bottom, right, top, wspace, hspace): one positional too many"
+  },
+  {
+   "call": [
+    "fig.autofmt_xdate",
+    [
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "FigureBase.autofmt_xdate() takes from 1 to 5 positional arguments but 6 were given",
+   "note": "fig.autofmt_xdate(bottom, rotation, ha, which): one positional too many"
+  },
+  {
+   "call": [
+    "fig.tight_layout",
+    [
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Figure.tight_layout() takes 1 positional argument but 2 were given",
+   "note": "fig.tight_layout(): one positional too many"
+  },
+  {
+   "call": [
+    "bar",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.72
+    ],
+    {
+     "bottom": [
+      0,
+      0
+     ],
+     "label": "one"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "bar",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.72,
+     [
+      10,
+      20
+     ]
+    ],
+    {
+     "label": "one"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "bar",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.72
+    ],
+    {
+     "width": 0.3
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.bar() got multiple values for argument 'width'",
+   "note": "width twice"
+  },
+  {
+   "call": [
+    "bar",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.72,
+     0
+    ],
+    {
+     "bottom": 1
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.bar() got multiple values for argument 'bottom'",
+   "note": "bottom twice"
+  },
+  {
+   "call": [
+    "bar",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.72,
+     0,
+     "center"
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.bar() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "align is keyword-only"
+  },
+  {
+   "call": [
+    "barh",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.4,
+     [
+      1,
+      2
+     ]
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "barh",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.4
+    ],
+    {
+     "height": 0.3
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.barh() got multiple values for argument 'height'",
+   "note": "height twice"
+  },
+  {
+   "call": [
+    "barh",
+    [
+     [
+      "a",
+      "b"
+     ],
+     [
+      300,
+      500
+     ],
+     0.4,
+     0,
+     "edge"
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.barh() takes from 3 to 5 positional arguments but 6 were given",
+   "note": "align is keyword-only"
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      1,
+      2,
+      1
+     ]
+    ],
+    {
+     "y2": 0.5
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     [
+      1,
+      2,
+      1
+     ],
+     0
+    ],
+    {
+     "y2": 0.5
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.fill_between() got multiple values for argument 'y2'",
+   "note": "y2 twice"
+  }
+ ]
+}
