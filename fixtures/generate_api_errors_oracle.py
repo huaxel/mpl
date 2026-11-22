@@ -31,6 +31,14 @@ def run(method, args, kwargs):
     fig, ax = plt.subplots()
     target = fig if method.startswith("fig.") else ax
     name = method[4:] if method.startswith("fig.") else method
+    # "spine:<side>.<setter>" is ax.spines[side].<setter>; "xticklabel:<i>.<setter>" is ax.get_xticklabels()[i].<setter>
+    if method.startswith("spine:"):
+        side, name = method[6:].split(".")
+        target = ax.spines[side]
+    elif method.startswith("xticklabel:"):
+        i, name = method[11:].split(".")
+        ax.plot([0, 1], [0, 1]); fig.canvas.draw()
+        target = ax.get_xticklabels()[int(i)]
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -142,6 +150,17 @@ case("set_xlabel", ["x"], {"loc": "middle"}, note="unknown loc")
 case("set_ylabel", ["y"], {"loc": "left"}, note="an x loc on y")
 case("set_ylabel", ["y", None, 4], {"labelpad": 2}, note="labelpad twice")
 case("set_xlabel", ["x"], {"bogus": 1}, note="not a Text property")
+
+# Issue #97: set_xscale / set_yscale scale keywords; the spine and tick label setters take one argument
+case("set_xscale", ["log"], {"base": 2})
+case("set_yscale", ["log"], {"base": 1}, note="base 1")
+case("set_xscale", ["linear"], {"base": 2}, note="linear takes no base")
+case("set_xscale", ["log"], {"bogus": 1}, note="unknown scale keyword")
+case("spine:left.set_visible", [False, 1], note="a second argument")
+case("spine:left.set_color", ["r"])
+case("spine:bottom.set_linewidth", [2, 3], note="a second argument")
+case("xticklabel:0.set_color", ["r", "b"], note="a second argument")
+case("xticklabel:0.set_fontsize", [12])
 
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)

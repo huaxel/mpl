@@ -16,9 +16,18 @@ const check = (ok: boolean, msg: string): void => { checks++; if (!ok) { fails++
 /** Run one spec call the way tools/replay-core.ts does: target[method](...args, kwargs) (kwargs only when non-empty), then draw. */
 const run = (method: string, args: readonly unknown[], kwargs: Readonly<Record<string, unknown>>): Error | null => {
   const [fig, ax] = subplots();
-  const fn = method.startsWith('fig.') ? method.slice(4) : method;
-  const target = (method.startsWith('fig.') ? fig : ax) as unknown as Dyn;
+  let fn = method.startsWith('fig.') ? method.slice(4) : method;
+  let target = (method.startsWith('fig.') ? fig : ax) as unknown as Dyn;
   try {
+    // "spine:<side>.<setter>" is ax.spines[side].<setter>; "xticklabel:<i>.<setter>" is ax.get_xticklabels()[i].<setter>
+    if (method.startsWith('spine:')) {
+      const [side, setter] = method.slice(6).split('.') as [string, string];
+      target = (ax.spines as unknown as Record<string, Dyn>)[side] as Dyn; fn = setter;
+    } else if (method.startsWith('xticklabel:')) {
+      const [i, setter] = method.slice(11).split('.') as [string, string];
+      ax.plot([0, 1], [0, 1]);
+      target = ax.get_xticklabels()[Number(i)] as unknown as Dyn; fn = setter;
+    }
     if (typeof target[fn] !== 'function') throw new Error(`no ${method}`);
     target[fn](...args, ...(Object.keys(kwargs).length > 0 ? [kwargs] : []));
     fig.toSVG();
@@ -93,14 +102,6 @@ const notKw: readonly [string, () => unknown][] = [
 for (const [what, f] of notKw) {
   try { f(); check(false, `${what}: accepted a non-object where the keyword object goes`); } catch (e) {
     check(e instanceof TypeError && /keyword arguments must be a plain object/.test((e as Error).message), `${what}: ${(e as Error).message}`);
-  }
-}
-// methods without a keyword object reject one, instead of ignoring it (set_xlabel's fontsize was dropped)
-for (const [what, f] of [
-  ['set_yscale("log", { base: 2 })', () => (subplots()[1] as unknown as Dyn)['set_yscale']?.('log', { base: 2 })],
-] as const) {
-  try { f(); check(false, `${what}: accepted an argument it ignores`); } catch (e) {
-    check(e instanceof TypeError && /takes 1 argument, but 2 arguments were given/.test((e as Error).message), `${what}: ${(e as Error).message}`);
   }
 }
 

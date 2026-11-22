@@ -2289,6 +2289,125 @@
    "raises": "AttributeError",
    "message": "'Text' object has no property 'bogus'",
    "note": "not a Text property"
+  },
+  {
+   "call": [
+    "set_xscale",
+    [
+     "log"
+    ],
+    {
+     "base": 2
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_yscale",
+    [
+     "log"
+    ],
+    {
+     "base": 1
+    }
+   ],
+   "raises": "ValueError",
+   "message": "The log base cannot be <= 0 or == 1",
+   "note": "base 1"
+  },
+  {
+   "call": [
+    "set_xscale",
+    [
+     "linear"
+    ],
+    {
+     "base": 2
+    }
+   ],
+   "raises": "TypeError",
+   "message": "LinearScale.__init__() got an unexpected keyword argument 'base'",
+   "note": "linear takes no base"
+  },
+  {
+   "call": [
+    "set_xscale",
+    [
+     "log"
+    ],
+    {
+     "bogus": 1
+    }
+   ],
+   "raises": "TypeError",
+   "message": "LogScale.__init__() got an unexpected keyword argument 'bogus'",
+   "note": "unknown scale keyword"
+  },
+  {
+   "call": [
+    "spine:left.set_visible",
+    [
+     false,
+     1
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Artist.set_visible() takes 2 positional arguments but 3 were given",
+   "note": "a second argument"
+  },
+  {
+   "call": [
+    "spine:left.set_color",
+    [
+     "r"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "spine:bottom.set_linewidth",
+    [
+     2,
+     3
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Patch.set_linewidth() takes 2 positional arguments but 3 were given",
+   "note": "a second argument"
+  },
+  {
+   "call": [
+    "xticklabel:0.set_color",
+    [
+     "r",
+     "b"
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Text.set_color() takes 2 positional arguments but 3 were given",
+   "note": "a second argument"
+  },
+  {
+   "call": [
+    "xticklabel:0.set_fontsize",
+    [
+     12
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
   }
  ]
 }

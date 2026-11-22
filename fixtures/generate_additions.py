@@ -1151,6 +1151,12 @@ case("axis_label_keeps_props", ("plot", [x, sx]),
      ("set_xlabel", ["first"], {"fontsize": 16, "labelpad": 12}), ("set_xlabel", ["second keeps size and pad"]),
      ("set_ylabel", ["y"], {"fontdict": {"fontsize": 13}, "fontsize": 8}))
 
+# Issue #97: set_xscale / set_yscale keywords (LogScale base)
+case("scale_log_base2", ("plot", [[1, 2, 4, 8, 16, 32, 64], [1, 3, 2, 5, 4, 6, 5]]), ("set_xscale", ["log"], {"base": 2}),
+     ("set_yscale", ["log"], {"base": 10, "nonpositive": "clip"}))
+case("scale_log_base_e3", ("$subplots", [1, 2]), ("plot", [[1, 3, 9, 27, 81], [1, 2, 3, 4, 5]]), ("set_xscale", ["log"], {"base": 3}),
+     ("sca", [1]), ("plot", [[1, 2.7, 7.4, 20, 55], [1, 2, 3, 4, 5]]), ("set_xscale", ["log"], {"base": math.e}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

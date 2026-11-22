@@ -206,13 +206,17 @@ get_subplotspec(): none for a free Axes.
 
 Axes._label_outer_xaxis / _label_outer_yaxis for a shared grid (subplots(sharex='col'|'all', …)): an Axes off the bottom row loses its x tick labels and offset text, one off the left column its y ones. Tick labels stay on the outer edge only; ticks are kept.
 
-### `Axes.set_xscale(s)`
+### `Axes.set_xscale(s, kwargs?)`
 
-set_xscale('linear' | 'log')
+set_xscale('linear' | 'log', { base, nonpositive }) — LogScale(base=10, nonpositive='clip'); subs and nonpositive='mask' throw.
 
-### `Axes.set_yscale(s)`
+Keyword arguments (unknown keys throw): `base`, `nonpositive`
 
-set_yscale('linear' | 'log')
+### `Axes.set_yscale(s, kwargs?)`
+
+set_yscale('linear' | 'log', { base, nonpositive }) — as set_xscale.
+
+Keyword arguments (unknown keys throw): `base`, `nonpositive`
 
 ### `Axes.set_aspect(aspect)`
 

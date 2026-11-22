@@ -1,0 +1,438 @@
+{
+ "spec": [
+  [
+   "plot",
+   [
+    [
+     1,
+     2,
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    [
+     1,
+     3,
+     2,
+     5,
+     4,
+     6,
+     5
+    ]
+   ],
+   {}
+  ],
+  [
+   "set_xscale",
+   [
+    "log"
+   ],
+   {
+    "base": 2
+   }
+  ],
+  [
+   "set_yscale",
+   [
+    "log"
+   ],
+   {
+    "base": 10,
+    "nonpositive": "clip"
+   }
+  ]
+ ],
+ "style": null,
+ "rc": {},
+ "xlim": [
+  0.8122523963562355,
+  78.79324245407463
+ ],
+ "ylim": [
+  0.914307826761828,
+  6.562341286358655
+ ],
+ "xticks": [
+  0.5,
+  1.0,
+  2.0,
+  4.0,
+  8.0,
+  16.0,
+  32.0,
+  64.0,
+  128.0
+ ],
+ "yticks": [
+  0.1,
+  1.0,
+  10.0
+ ],
+ "xticklabels": [
+  "$\\mathdefault{2^{-1}}$",
+  "$\\mathdefault{2^{0}}$",
+  "$\\mathdefault{2^{1}}$",
+  "$\\mathdefault{2^{2}}$",
+  "$\\mathdefault{2^{3}}$",
+  "$\\mathdefault{2^{4}}$",
+  "$\\mathdefault{2^{5}}$",
+  "$\\mathdefault{2^{6}}$",
+  "$\\mathdefault{2^{7}}$"
+ ],
+ "yticklabels": [
+  "$\\mathdefault{10^{-1}}$",
+  "$\\mathdefault{10^{0}}$",
+  "$\\mathdefault{10^{1}}$"
+ ],
+ "xoffset": "",
+ "yoffset": "",
+ "legend": null,
+ "x": {
+  "lim": [
+   0.8122523963562355,
+   78.79324245407463
+  ],
+  "ticks": [
+   0.5,
+   1.0,
+   2.0,
+   4.0,
+   8.0,
+   16.0,
+   32.0,
+   64.0,
+   128.0
+  ],
+  "labels": [
+   "$\\mathdefault{2^{-1}}$",
+   "$\\mathdefault{2^{0}}$",
+   "$\\mathdefault{2^{1}}$",
+   "$\\mathdefault{2^{2}}$",
+   "$\\mathdefault{2^{3}}$",
+   "$\\mathdefault{2^{4}}$",
+   "$\\mathdefault{2^{5}}$",
+   "$\\mathdefault{2^{6}}$",
+   "$\\mathdefault{2^{7}}$"
+  ],
+  "minor": [],
+  "minorlabels": [],
+  "offset": ""
+ },
+ "y": {
+  "lim": [
+   0.914307826761828,
+   6.562341286358655
+  ],
+  "ticks": [
+   0.1,
+   1.0,
+   10.0
+  ],
+  "labels": [
+   "$\\mathdefault{10^{-1}}$",
+   "$\\mathdefault{10^{0}}$",
+   "$\\mathdefault{10^{1}}$"
+  ],
+  "minor": [
+   0.2,
+   0.30000000000000004,
+   0.4,
+   0.5,
+   0.6000000000000001,
+   0.7000000000000001,
+   0.8,
+   0.9,
+   2.0,
+   3.0,
+   4.0,
+   5.0,
+   6.0,
+   7.0,
+   8.0,
+   9.0
+  ],
+  "minorlabels": [
+   "$\\mathdefault{2\\times10^{-1}}$",
+   "$\\mathdefault{3\\times10^{-1}}$",
+   "$\\mathdefault{4\\times10^{-1}}$",
+   "",
+   "$\\mathdefault{6\\times10^{-1}}$",
+   "",
+   "",
+   "",
+   "$\\mathdefault{2\\times10^{0}}$",
+   "$\\mathdefault{3\\times10^{0}}$",
+   "$\\mathdefault{4\\times10^{0}}$",
+   "",
+   "$\\mathdefault{6\\times10^{0}}$",
+   "",
+   "",
+   ""
+  ],
+  "offset": ""
+ },
+ "axes": [
+  {
+   "xlim": [
+    0.8122523963562355,
+    78.79324245407463
+   ],
+   "ylim": [
+    0.914307826761828,
+    6.562341286358655
+   ],
+   "xticks": [
+    0.5,
+    1.0,
+    2.0,
+    4.0,
+    8.0,
+    16.0,
+    32.0,
+    64.0,
+    128.0
+   ],
+   "yticks": [
+    0.1,
+    1.0,
+    10.0
+   ],
+   "xticklabels": [
+    "$\\mathdefault{2^{-1}}$",
+    "$\\mathdefault{2^{0}}$",
+    "$\\mathdefault{2^{1}}$",
+    "$\\mathdefault{2^{2}}$",
+    "$\\mathdefault{2^{3}}$",
+    "$\\mathdefault{2^{4}}$",
+    "$\\mathdefault{2^{5}}$",
+    "$\\mathdefault{2^{6}}$",
+    "$\\mathdefault{2^{7}}$"
+   ],
+   "yticklabels": [
+    "$\\mathdefault{10^{-1}}$",
+    "$\\mathdefault{10^{0}}$",
+    "$\\mathdefault{10^{1}}$"
+   ],
+   "xoffset": "",
+   "yoffset": "",
+   "legend": null,
+   "x": {
+    "lim": [
+     0.8122523963562355,
+     78.79324245407463
+    ],
+    "ticks": [
+     0.5,
+     1.0,
+     2.0,
+     4.0,
+     8.0,
+     16.0,
+     32.0,
+     64.0,
+     128.0
+    ],
+    "labels": [
+     "$\\mathdefault{2^{-1}}$",
+     "$\\mathdefault{2^{0}}$",
+     "$\\mathdefault{2^{1}}$",
+     "$\\mathdefault{2^{2}}$",
+     "$\\mathdefault{2^{3}}$",
+     "$\\mathdefault{2^{4}}$",
+     "$\\mathdefault{2^{5}}$",
+     "$\\mathdefault{2^{6}}$",
+     "$\\mathdefault{2^{7}}$"
+    ],
+    "minor": [],
+    "minorlabels": [],
+    "offset": ""
+   },
+   "y": {
+    "lim": [
+     0.914307826761828,
+     6.562341286358655
+    ],
+    "ticks": [
+     0.1,
+     1.0,
+     10.0
+    ],
+    "labels": [
+     "$\\mathdefault{10^{-1}}$",
+     "$\\mathdefault{10^{0}}$",
+     "$\\mathdefault{10^{1}}$"
+    ],
+    "minor": [
+     0.2,
+     0.30000000000000004,
+     0.4,
+     0.5,
+     0.6000000000000001,
+     0.7000000000000001,
+     0.8,
+     0.9,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "minorlabels": [
+     "$\\mathdefault{2\\times10^{-1}}$",
+     "$\\mathdefault{3\\times10^{-1}}$",
+     "$\\mathdefault{4\\times10^{-1}}$",
+     "",
+     "$\\mathdefault{6\\times10^{-1}}$",
+     "",
+     "",
+     "",
+     "$\\mathdefault{2\\times10^{0}}$",
+     "$\\mathdefault{3\\times10^{0}}$",
+     "$\\mathdefault{4\\times10^{0}}$",
+     "",
+     "$\\mathdefault{6\\times10^{0}}$",
+     "",
+     "",
+     ""
+    ],
+    "offset": ""
+   }
+  }
+ ],
+ "figaxes": [
+  {
+   "xlim": [
+    0.8122523963562355,
+    78.79324245407463
+   ],
+   "ylim": [
+    0.914307826761828,
+    6.562341286358655
+   ],
+   "xticks": [
+    0.5,
+    1.0,
+    2.0,
+    4.0,
+    8.0,
+    16.0,
+    32.0,
+    64.0,
+    128.0
+   ],
+   "yticks": [
+    0.1,
+    1.0,
+    10.0
+   ],
+   "xticklabels": [
+    "$\\mathdefault{2^{-1}}$",
+    "$\\mathdefault{2^{0}}$",
+    "$\\mathdefault{2^{1}}$",
+    "$\\mathdefault{2^{2}}$",
+    "$\\mathdefault{2^{3}}$",
+    "$\\mathdefault{2^{4}}$",
+    "$\\mathdefault{2^{5}}$",
+    "$\\mathdefault{2^{6}}$",
+    "$\\mathdefault{2^{7}}$"
+   ],
+   "yticklabels": [
+    "$\\mathdefault{10^{-1}}$",
+    "$\\mathdefault{10^{0}}$",
+    "$\\mathdefault{10^{1}}$"
+   ],
+   "xoffset": "",
+   "yoffset": "",
+   "legend": null,
+   "x": {
+    "lim": [
+     0.8122523963562355,
+     78.79324245407463
+    ],
+    "ticks": [
+     0.5,
+     1.0,
+     2.0,
+     4.0,
+     8.0,
+     16.0,
+     32.0,
+     64.0,
+     128.0
+    ],
+    "labels": [
+     "$\\mathdefault{2^{-1}}$",
+     "$\\mathdefault{2^{0}}$",
+     "$\\mathdefault{2^{1}}$",
+     "$\\mathdefault{2^{2}}$",
+     "$\\mathdefault{2^{3}}$",
+     "$\\mathdefault{2^{4}}$",
+     "$\\mathdefault{2^{5}}$",
+     "$\\mathdefault{2^{6}}$",
+     "$\\mathdefault{2^{7}}$"
+    ],
+    "minor": [],
+    "minorlabels": [],
+    "offset": ""
+   },
+   "y": {
+    "lim": [
+     0.914307826761828,
+     6.562341286358655
+    ],
+    "ticks": [
+     0.1,
+     1.0,
+     10.0
+    ],
+    "labels": [
+     "$\\mathdefault{10^{-1}}$",
+     "$\\mathdefault{10^{0}}$",
+     "$\\mathdefault{10^{1}}$"
+    ],
+    "minor": [
+     0.2,
+     0.30000000000000004,
+     0.4,
+     0.5,
+     0.6000000000000001,
+     0.7000000000000001,
+     0.8,
+     0.9,
+     2.0,
+     3.0,
+     4.0,
+     5.0,
+     6.0,
+     7.0,
+     8.0,
+     9.0
+    ],
+    "minorlabels": [
+     "$\\mathdefault{2\\times10^{-1}}$",
+     "$\\mathdefault{3\\times10^{-1}}$",
+     "$\\mathdefault{4\\times10^{-1}}$",
+     "",
+     "$\\mathdefault{6\\times10^{-1}}$",
+     "",
+     "",
+     "",
+     "$\\mathdefault{2\\times10^{0}}$",
+     "$\\mathdefault{3\\times10^{0}}$",
+     "$\\mathdefault{4\\times10^{0}}$",
+     "",
+     "$\\mathdefault{6\\times10^{0}}$",
+     "",
+     "",
+     ""
+    ],
+    "offset": ""
+   }
+  }
+ ]
+}

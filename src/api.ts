@@ -288,6 +288,8 @@ const viewOf = (ax: Axis): readonly [number, number] => (ax.limits.kind === 'aut
 /** A new value when given, else the old one (a property set on a Text stays until set again). */
 const keepSet = <T>(n: Option<T>, o: Option<T>): Option<T> => (n.kind === 'some' ? n : o);
 const NO_LABEL_STYLE: AxisLabelStyle = { sizePt: none, color: none, weight: none, padPt: none, loc: 'center' };
+/** A one-argument setter (Spine.set_visible, Text.set_color, …) that rejects a second argument instead of dropping it. */
+const oneArg = <T>(name: string, f: (v: T) => void) => (v: T, ...more: readonly unknown[]): void => { arity(name, 1 + more.length, 1, false); f(v); };
 /** A point (x, y), as matplotlib's xy tuples. */
 export type XY = readonly [number, number];
 const DATA_COORDS: LineCoords = { x: 'data', y: 'data' };
@@ -641,9 +643,9 @@ export class Axis {
     return this;
   }
 
-  setScale(v: unknown): void {
+  setScale(v: unknown, base: number = 10): void {
     if (v === 'linear') this.scale = { kind: 'linear' };
-    else if (v === 'log') this.scale = { kind: 'log', base: 10 };
+    else if (v === 'log') this.scale = { kind: 'log', base };
     else throw new TypeError(`unsupported scale ${JSON.stringify(v)}; supported: 'linear', 'log'`);
     this.request();   // _set_axes_scale -> _request_autoscale_view
   }
@@ -799,10 +801,19 @@ export class Axes {
     if (axis === 'x' && rows[1] !== grid.nrows) { this.xlabel = ''; this.hiddenLabels = { ...this.hiddenLabels, x: true }; }
     if (axis === 'y' && cols[0] !== 0) { this.ylabel = ''; this.hiddenLabels = { ...this.hiddenLabels, y: true }; }
   }
-  /** set_xscale('linear' | 'log') */
-  set_xscale(s: unknown): this { arity('set_xscale', arguments.length, 1, false); this.xaxis.setScale(s); return this; }
-  /** set_yscale('linear' | 'log') */
-  set_yscale(s: unknown): this { arity('set_yscale', arguments.length, 1, false); this.yaxis.setScale(s); return this; }
+  /** set_xscale('linear' | 'log', { base, nonpositive }) — LogScale(base=10, nonpositive='clip'); subs and nonpositive='mask' throw. */
+  set_xscale(s: unknown, kwargs: Kwargs = {}): this { arity('set_xscale', arguments.length, 1, true); this.xaxis.setScale(s, this.scaleKw(s, kwargs, 'set_xscale')); return this; }
+  /** set_yscale('linear' | 'log', { base, nonpositive }) — as set_xscale. */
+  set_yscale(s: unknown, kwargs: Kwargs = {}): this { arity('set_yscale', arguments.length, 1, true); this.yaxis.setScale(s, this.scaleKw(s, kwargs, 'set_yscale')); return this; }
+  /** The scale's own keywords: LinearScale takes none; LogScale base (> 0, ≠ 1) and nonpositive ('clip', mpl's only mode). */
+  private scaleKw(s: unknown, kwargs: Kwargs, fn: string): number {
+    const kw = new KwReader(kwargs, fn);
+    if (s !== 'log') { kw.done(); return 10; }
+    const base = kw.read(['base'], (v): Result<number> => (typeof v === 'number' && Number.isFinite(v) && v > 0 && v !== 1 ? ok(v) : err('The log base cannot be <= 0 or == 1')), () => 10);
+    kw.read(['nonpositive'], (v): Result<'clip'> => (v === 'clip' ? ok(v) : v === 'mask' ? err("nonpositive='mask' is not supported in mpl yet") : err(`nonpositive must be 'clip' or 'mask', got ${JSON.stringify(v)}`)), () => 'clip' as const);
+    kw.done();
+    return base;
+  }
   /**
    * set_aspect('auto' | 'equal' | number) — data aspect ratio with adjustable='box' (matplotlib default
    * for set_aspect). The Axes box is shrunk and centred to match; 'equal' is ratio 1.
@@ -2217,10 +2228,10 @@ export class Axes {
     set_position: (pos: unknown) => void;
   }> {
     const api = (side: 'left' | 'right' | 'top' | 'bottom') => ({
-      set_visible: (v: boolean) => { this.spineOv[side].visible = !!v; },
-      set_color: (v: unknown) => { this.spineOv[side].color = some(unwrap(parseRgb(v, this.theme.axes.cycle))); },
-      set_linewidth: (w: number) => { this.spineOv[side].widthPt = some(unwrap(num('linewidth')(w))); },
-      set_position: (p: unknown) => { this.spineOv[side].position = some(unwrap(parseSpinePosition(p))); },
+      set_visible: oneArg('Spine.set_visible', (v: boolean) => { this.spineOv[side].visible = !!v; }),
+      set_color: oneArg('Spine.set_color', (v: unknown) => { this.spineOv[side].color = some(unwrap(parseRgb(v, this.theme.axes.cycle))); }),
+      set_linewidth: oneArg('Spine.set_linewidth', (w: number) => { this.spineOv[side].widthPt = some(unwrap(num('linewidth')(w))); }),
+      set_position: oneArg('Spine.set_position', (p: unknown) => { this.spineOv[side].position = some(unwrap(parseSpinePosition(p))); }),
     });
     return { left: api('left'), right: api('right'), top: api('top'), bottom: api('bottom') };
   }
@@ -2396,23 +2407,23 @@ export class Axes {
     const texts = a === 'x' ? meta.x.labels : meta.y.labels;
     const one: TickLabelStyle = { color: none, sizePt: none, weight: none, rotation: none, ha: none, visible: none };
     return texts.map((text, j): TickLabelText => ({
-      get_text: () => text,
-      set_fontweight: (w: unknown) => { this.styleTickLabel(a, j, { ...one, weight: some(unwrap(weightOf(w))) }); },
-      set_color: (c: unknown) => { this.styleTickLabel(a, j, { ...one, color: some(unwrap(parseRgb(c, this.theme.axes.cycle))) }); },
-      set_fontsize: (s: unknown) => { this.styleTickLabel(a, j, { ...one, sizePt: some(unwrap(parseFontSize(s, this.theme.font.sizePt))) }); },
-      set_rotation: (r: unknown) => {
+      get_text: (...more: readonly unknown[]) => { arity('Text.get_text', more.length, 0, false); return text; },
+      set_fontweight: oneArg('Text.set_fontweight', (w: unknown) => { this.styleTickLabel(a, j, { ...one, weight: some(unwrap(weightOf(w))) }); }),
+      set_color: oneArg('Text.set_color', (c: unknown) => { this.styleTickLabel(a, j, { ...one, color: some(unwrap(parseRgb(c, this.theme.axes.cycle))) }); }),
+      set_fontsize: oneArg('Text.set_fontsize', (s: unknown) => { this.styleTickLabel(a, j, { ...one, sizePt: some(unwrap(parseFontSize(s, this.theme.font.sizePt))) }); }),
+      set_rotation: oneArg('Text.set_rotation', (r: unknown) => {
         if (typeof r !== 'number' || !Number.isFinite(r)) throw new TypeError('rotation must be a finite number of degrees');
         this.styleTickLabel(a, j, { ...one, rotation: some(r) });
-      },
-      set_ha: (h: unknown) => {
+      }),
+      set_ha: oneArg('Text.set_ha', (h: unknown) => {
         if (h !== 'left' && h !== 'center' && h !== 'right') throw new TypeError(`ha must be 'left', 'center' or 'right'`);
         this.styleTickLabel(a, j, { ...one, ha: some(h) });
-      },
-      set_visible: (v: unknown) => {
+      }),
+      set_visible: oneArg('Text.set_visible', (v: unknown) => {
         if (typeof v !== 'boolean') throw new TypeError('visible must be a boolean');
         this.styleTickLabel(a, j, { ...one, visible: some(v) });
-      },
-      set: (kwargs: Kwargs) => { const kw = new KwReader(kwargs, 'Text.set'); const st = this.readTextStyle(kw); kw.done(); this.styleTickLabel(a, j, st); },
+      }),
+      set: oneArg('Text.set', (kwargs: Kwargs) => { const kw = new KwReader(kwargs, 'Text.set'); const st = this.readTextStyle(kw); kw.done(); this.styleTickLabel(a, j, st); }),
     }));
   }
   /** grid(visible?, which?, axis?, { visible, which, axis, color|c, linewidth|lw, linestyle|ls, alpha }) — Axes.grid, positionals
