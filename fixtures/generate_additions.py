@@ -1038,6 +1038,25 @@ case("set_ticks_labels_keyword", ("bar", [[0, 1, 2, 3], [3, 1, 4, 1]]),
      ("set_xticks", [[0, 1, 2, 3]], {"labels": ["north", "east", "south", "west"], "rotation": 30, "ha": "right"}),
      ("set_yticks", [[0, 2, 4]], {"labels": ["0", "two", "four"]}))
 
+# Issue #90: zorder on bar/barh/axvspan/axhspan; linestyle/ls on the spans' edges (dashes scale with linewidth, as Patch's do)
+case("bar_zorder_over_span", ("axvspan", [1.5, 3.5], {"color": "C1", "alpha": 0.3, "zorder": 0, "label": "era"}),
+     ("plot", [[0, 6], [2, 2]], {"color": "k", "lw": 3, "zorder": 1.5, "label": "under the bars"}),
+     ("bar", [[1, 2, 3, 4, 5], [3, 4, 2, 5, 3]], {"zorder": 2, "label": "bars"}),
+     ("plot", [[0, 6], [4, 4]], {"color": "C3", "lw": 2, "label": "same zorder, later"}), ("legend", [], {"loc": "upper left"}))
+case("barh_zorder_under_line", ("plot", [[0, 5], [0, 3]], {"color": "C2", "lw": 4}),
+     ("barh", [["a", "b", "c"], [4, 2, 3]], {"zorder": 2.5, "color": "C0"}),
+     ("axhspan", [0.5, 1.5], {"color": "0.8", "zorder": 3.5}))
+HEAT = {"$array": [[(i * 7 + j * 3) % 10 for i in range(8)] for j in range(6)]}
+case("span_linestyle_heatmap", ("imshow", [HEAT], {"cmap": "viridis", "interpolation": "nearest"}),
+     ("axhspan", [1.5, 3.5], {"facecolor": "none", "edgecolor": "w", "linestyle": "--", "linewidth": 2}),
+     ("axvspan", [0.5, 2.5], {"facecolor": "none", "edgecolor": "C3", "ls": ":", "lw": 1.5, "ymin": 0.1, "ymax": 0.9}),
+     ("axvspan", [6.5, 4.5], {"facecolor": "none", "edgecolor": "k", "ls": "-.", "lw": 1}))
+case("span_linestyle_legend", ("plot", [x, sx]),
+     ("axvspan", [2, 4], {"facecolor": "C0", "alpha": 0.2, "edgecolor": "C0", "linestyle": "dashed", "lw": 1.5, "label": "dashed"}),
+     ("axhspan", [-0.4, 0.2], {"facecolor": "none", "edgecolor": "C1", "linestyle": T(0, [4, 2, 1, 2]), "lw": 2, "label": "dash tuple"}),
+     ("axvspan", [6, 7], {"color": "C2", "alpha": 0.3, "ls": "None", "lw": 3, "label": "no edge"}),
+     ("legend", [], {"loc": "lower left"}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

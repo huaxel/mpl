@@ -304,15 +304,15 @@ Keyword arguments (unknown keys throw): `distance`, `textprops`, `rotate`, `alig
 
 ### `Axes.bar(x, height, ...rest)`
 
-bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — vertical bars. width and bottom may come positionally, as in matplotlib's bar(x, height, width=0.8, bottom=None); a name given both ways, a third positional, or a non-object where the keyword object goes throws a TypeError.
+bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on, zorder }) — vertical bars. width and bottom may come positionally, as in matplotlib's bar(x, height, width=0.8, bottom=None); a name given both ways, a third positional, or a non-object where the keyword object goes throws a TypeError.
 
-Keyword arguments (unknown keys throw): `width`, `bottom`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `width`, `bottom`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `zorder`
 
 ### `Axes.barh(y, width, ...rest)`
 
-barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on }) — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). height and left may come positionally, as in matplotlib's barh(y, width, height=0.8, left=None), with bar()'s TypeErrors.
+barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on, zorder }) — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). height and left may come positionally, as in matplotlib's barh(y, width, height=0.8, left=None), with bar()'s TypeErrors.
 
-Keyword arguments (unknown keys throw): `height`, `left`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `height`, `left`, `align`, `color | facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `zorder`
 
 ### `Axes.fill_between(xRaw, y1Raw, ...rest)`
 
@@ -354,15 +354,15 @@ Keyword arguments (unknown keys throw): `s`, `marker`, `alpha`, `c | color`, `cm
 
 ### `Axes.axvspan(xmin, xmax, kwargs?)`
 
-axvspan: vertical span in data x and axes-fraction y
+axvspan(xmin, xmax, { ymin, ymax, color, facecolor|fc, edgecolor|ec, linewidth|lw, linestyle|ls, alpha, label, clip_on, zorder }) — a Rectangle from data x xmin to xmax over axes-fraction y ymin to ymax. linestyle dashes the edge (scaled by linewidth, as Patch's are; 'None' draws no edge); zorder defaults to 1, as patches'. A labelled span is a legend child, as in matplotlib.
 
-Keyword arguments (unknown keys throw): `ymin`, `ymax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `ymin`, `ymax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `linestyle | ls`, `zorder`
 
 ### `Axes.axhspan(ymin, ymax, kwargs?)`
 
-axhspan: horizontal span in data y and axes-fraction x
+axhspan(ymin, ymax, { xmin, xmax, …axvspan's }) — axvspan across: data y ymin to ymax over axes-fraction x xmin to xmax.
 
-Keyword arguments (unknown keys throw): `xmin`, `xmax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `xmin`, `xmax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `linestyle | ls`, `zorder`
 
 ### `Axes.set_title(s, kwargs?)`
 

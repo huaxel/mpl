@@ -97,7 +97,7 @@ function drawArtist(a: Artist, f: Frame, theme: Theme, k: number, clip: Clip, tr
       case 'text': return tracer.span('artist.text', { text: a.text, coords: a.coords }, () => drawText(a, f, k * 72, resolveFace(theme.font.families, a.weight)));
       case 'scatter': return tracer.span('artist.scatter', { points: a.x.length }, () => drawScatter(a, f, theme, k, clip));
       case 'annotation': return tracer.span('artist.annotation', { }, () => drawAnnotation(a, f, f.W, k * 72, theme, k, clip));
-      case 'span': return tracer.span('artist.span', { orientation: a.orientation }, () => drawSpan(a, f, k, clip));
+      case 'span': return tracer.span('artist.span', { orientation: a.orientation }, () => drawSpan(a, f, theme, k, clip));
       case 'axline': return tracer.span('artist.axline', { through: a.through.kind }, (sp) => drawAxLine(a, f, theme, k, clip, sp));
       case 'segments': return tracer.span('artist.segments', { segments: a.x0.length }, () => drawSegments(a, f, theme, k, clip));
       case 'polygon': return tracer.span('artist.polygon', { vertices: a.x.length, closed: a.closed }, () => drawPolygon(a, f, k, clip));
@@ -113,8 +113,8 @@ function drawArtist(a: Artist, f: Frame, theme: Theme, k: number, clip: Clip, tr
 /** Artist.zorder: patches and path/fill collections 1, lines and line collections 2 (or what the artist says), text 3. */
 function zorder(a: Artist): number {
   switch (a.kind) {
-    case 'bar': case 'fill': case 'span': return 1;
-    case 'scatter': case 'image': return a.zorder;
+    case 'fill': return 1;
+    case 'bar': case 'span': case 'scatter': case 'image': return a.zorder;
     case 'axline': return 2;
     case 'line': case 'segments': case 'polygon': case 'wedge': return a.zorder;
     case 'text': case 'annotation': case 'errorbar': return 3;
@@ -135,10 +135,10 @@ function legendEntries(ax: AxesSpec, drawn: readonly Drawn[]): readonly Sourced[
     if (h.kind === 'none') return;
     const e: Sourced = { entry: { label: a.label.text, handle: h.value }, artist: i };
     switch (a.kind) {
-      // Line2D, patches and collections are Axes children; hist's labelled bar is a child Rectangle
-      case 'line': case 'fill': case 'scatter': case 'axline': case 'segments': case 'polygon': case 'wedge': children.push(e); break;
+      // Line2D, patches and collections are Axes children; hist's labelled bar is a child Rectangle, and so is an axvspan/axhspan
+      case 'line': case 'fill': case 'scatter': case 'axline': case 'segments': case 'polygon': case 'wedge': case 'span': children.push(e); break;
       case 'bar': (a.legend === 'child' ? children : containers).push(e); break;
-      case 'span': case 'errorbar': case 'image': containers.push(e); break;
+      case 'errorbar': case 'image': containers.push(e); break;
       case 'sticky': break;
       default: assertNever(a);
     }

@@ -193,6 +193,8 @@ export type BarArtist = {
   readonly sticky: boolean;
   /** hist's bars: each labelled bar is a legend child (Rectangle), not a BarContainer entry */
   readonly legend: 'container' | 'child';
+  /** Artist.zorder: patches default to 1 */
+  readonly zorder: number;
 };
 /** fill_between: the polygon start → (x, y1)… → end → (x, y2) reversed. `color=` paints the edge too (Collection.set_color). */
 export type FillArtist = {
@@ -283,6 +285,11 @@ export type SpanArtist = {
   /** [0,1] fractions on the other axis, in axes coordinates */
   readonly f0: number; readonly f1: number;
   readonly face: Paint; readonly edge: BarEdge; readonly label: Label; readonly clip: boolean;
+  /** Patch.set_linestyle: the edge's dashes (scaled by the linewidth, as lines' are); none is 'None' (or '', ' '), which
+   *  Patch.draw draws with no edge. The legend's copy (Patch.update_from) takes the dash pattern only, so it draws solid. */
+  readonly edgeStyle: Option<LineStyle>;
+  /** Artist.zorder: patches default to 1 */
+  readonly zorder: number;
 };
 /** imshow: ScalarMappable raster over an extent in data coordinates. */
 export type ImageArtist = {
@@ -321,7 +328,7 @@ export type Artist = LineArtist | BarArtist | FillArtist | TextArtist | ScatterA
 /** What a legend entry draws. */
 export type Handle =
   | { readonly kind: 'line'; readonly stroke: LineStroke; readonly markers: LineMarkers }
-  | { readonly kind: 'patch'; readonly face: Paint; readonly edge: BarEdge }
+  | { readonly kind: 'patch'; readonly face: Paint; readonly edge: BarEdge; readonly edgeStyle: LineStyle }
   | { readonly kind: 'errorbar'; readonly errorbar: ErrorbarHandle }
   /** HandlerLineCollection: a 2-point Line2D given the collection's dash tuple, so it counts as dashed
    *  (dash cap and join) even when solid */

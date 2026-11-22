@@ -3,7 +3,7 @@
 import type { Frame } from './frame.ts';
 import { tx, ty, tyText } from './frame.ts';
 import type { Box } from './legend-index.ts';
-import { lineStroke, markersNode, snapsAuto } from './marks.ts';
+import { dashFor, lineStroke, markersNode, snapsAuto } from './marks.ts';
 import type { XY } from './path.ts';
 import { cleanupStroke, decimateMinMax, isRectilinear } from './path.ts';
 import { inkOf, pathNode, rectNode, snapIf, snapOffset } from './scene.ts';
@@ -46,7 +46,8 @@ export function handleOf(a: Artist): Option<Handle> {
     case 'line': return some({ kind: 'line', stroke: a.stroke, markers: a.markers });
     case 'axline': return some({ kind: 'line', stroke: a.stroke, markers: { kind: 'none' } });
     case 'segments': return some({ kind: 'collection', color: a.colors[0], widthPt: a.widthPt, style: a.styles[0] });
-    case 'bar': case 'fill': case 'polygon': case 'span': case 'wedge': return some({ kind: 'patch', face: a.face, edge: a.edge });
+    case 'span': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: a.edgeStyle.kind === 'some' ? a.edgeStyle.value : 'solid' });
+    case 'bar': case 'fill': case 'polygon': case 'wedge': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: 'solid' });
     case 'scatter': return some({ kind: 'scatter', shape: a.shape, collection: a.collection, edgeWidthPt: a.edgeWidthPt });
     case 'errorbar': return some({ kind: 'errorbar', errorbar: a.handle });
     case 'image': return none;
@@ -570,12 +571,22 @@ function snapRectilinear(segs: readonly Seg[], off: number): readonly Seg[] {
 }
 
 /** axvspan / axhspan: spans in data × axes-fraction coordinates. */
-export function drawSpan(a: SpanArtist, f: Frame, k: number, clip: Clip): Drawn {
-  const stroke: Option<Stroke> = a.edge.kind === 'on' && a.edge.widthPt > 0 ? some({ color: a.edge.color, width: strokePx(a.edge.widthPt, k), cap: 'butt', join: 'miter', dash: { kind: 'solid' } }) : none;
+export function drawSpan(a: SpanArtist, f: Frame, theme: Theme, k: number, clip: Clip): Drawn {
+  const dash = a.edge.kind === 'on' && a.edgeStyle.kind === 'some' ? dashFor(theme, a.edgeStyle.value, a.edge.widthPt, k) : { kind: 'solid' as const };
+  const stroke: Option<Stroke> = a.edge.kind === 'on' && a.edge.widthPt > 0 && a.edgeStyle.kind === 'some' ? some({ color: a.edge.color, width: strokePx(a.edge.widthPt, k), cap: 'butt', join: 'miter', dash }) : none;
   const ink = inkOf(a.face, stroke);
   if (ink.kind === 'none') return { nodes: [], lines: [], boxes: [], points: [], paths: [], handle: handleOf(a) };
   const off = stroke.kind === 'some' ? snapOffset(stroke.value.width) : 0;
   const sn = (v: number): number => (f.snap ? Math.floor(v + 0.5) + off : v);
+  if (dash.kind === 'dashed') {
+    // A dash pattern runs along the path from its first vertex: Rectangle((a0, f0), a1 - a0, f1 - f0)'s unit-square path,
+    // (a0, f0) → (a1, f0) → (a1, f1) → (a0, f1) → close, in the span's own order (a reversed span runs the other way)
+    const [X0, X1, Y0, Y1] = a.orientation === 'vertical'
+      ? [tx(f, a.a0), tx(f, a.a1), a.f0 * -f.box.h + (f.Hg - f.box.b), a.f1 * -f.box.h + (f.Hg - f.box.b)]
+      : [a.f0 * f.box.w + f.box.x0, a.f1 * f.box.w + f.box.x0, ty(f, a.a0), ty(f, a.a1)];
+    const segs: readonly Seg[] = [['M', sn(X0), sn(Y0)], ['L', sn(X1), sn(Y0)], ['L', sn(X1), sn(Y1)], ['L', sn(X0), sn(Y1)], ['Z']];
+    return { nodes: [{ kind: 'group', clip, nodes: [pathNode(segs, ink.value)], tag: '' }], lines: [], boxes: [], points: [], paths: [], handle: handleOf(a) };
+  }
   if (a.orientation === 'vertical') {
     const x0 = tx(f, a.a0), x1 = tx(f, a.a1);
     const y0 = a.f0 * -f.box.h + (f.Hg - f.box.b), y1 = a.f1 * -f.box.h + (f.Hg - f.box.b);

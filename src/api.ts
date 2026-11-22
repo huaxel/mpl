@@ -1222,8 +1222,8 @@ export class Axes {
         const faces = Array.from({ length: nb - 1 }, () => face);
         const base = Float64Array.from(bottom);
         const bar: BarArtist = vertical
-          ? { kind: 'bar', orientation: 'vertical', x: lo, y: base, w: Float64Array.from(width), h: height, face, faces, edge, label: lblOf(k), clip, sticky: k === 0, legend: 'child' }
-          : { kind: 'bar', orientation: 'horizontal', x: base, y: lo, w: height, h: Float64Array.from(width), face, faces, edge, label: lblOf(k), clip, sticky: k === 0, legend: 'child' };
+          ? { kind: 'bar', orientation: 'vertical', x: lo, y: base, w: Float64Array.from(width), h: height, face, faces, edge, label: lblOf(k), clip, sticky: k === 0, legend: 'child', zorder: 1 }
+          : { kind: 'bar', orientation: 'horizontal', x: base, y: lo, w: height, h: Float64Array.from(width), face, faces, edge, label: lblOf(k), clip, sticky: k === 0, legend: 'child', zorder: 1 };
         this.artists.push(bar);
         patches.push({ kind: 'bars', bars: bar });
         if (stacked) bottom = Float64Array.from(top);
@@ -1688,7 +1688,7 @@ export class Axes {
   }
 
   /**
-   * bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on })
+   * bar(x, height, width?, bottom?, { width, bottom, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on, zorder })
    * — vertical bars. width and bottom may come positionally, as in matplotlib's bar(x, height, width=0.8, bottom=None); a name
    * given both ways, a third positional, or a non-object where the keyword object goes throws a TypeError.
    */
@@ -1697,7 +1697,7 @@ export class Axes {
     return this.bars(kw, x, height, 'vertical', kw.get(['width']), kw.get(['bottom']));
   }
   /**
-   * barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on })
+   * barh(y, width, height?, left?, { height, left, align, color|facecolor|fc, edgecolor|ec, linewidth|lw, alpha, label, clip_on, zorder })
    * — horizontal bars; `left` offsets each bar (Gantt and waterfall charts). height and left may come positionally, as in
    * matplotlib's barh(y, width, height=0.8, left=None), with bar()'s TypeErrors.
    */
@@ -1730,6 +1730,7 @@ export class Axes {
     const alpha = kw.read(['alpha'], (v): Result<Option<number>> => (typeof v === 'number' && v >= 0 && v <= 1 ? ok(some(v)) : err('alpha must be in [0, 1]')), (): Option<number> => none);
     const lbl = kw.read(['label'], label, (): Label => ({ kind: 'none' }));
     const clip = kw.read(['clip_on', 'clipon', 'clip'], bool('clip_on'), () => true);
+    const zorder = kw.read(['zorder'], num('zorder'), () => 1);
     kw.done();
     // Patch.set_alpha replaces the alpha of both face and edge colours
     const withAlpha = (p: Paint): Paint => (p.kind === 'solid' && alpha.kind === 'some' ? { kind: 'solid', color: { hex: p.color.hex, alpha: alpha.value } } : p);
@@ -1741,8 +1742,8 @@ export class Axes {
     const edge: BarEdge = edgePaint.kind === 'solid' && edgePaint.color.alpha > 0 && lw > 0 ? { kind: 'on', color: edgePaint.color, widthPt: lw } : { kind: 'none' };
     // (x, y) is the corner at the base: vertical bars grow along y from `base`
     const bar: BarArtist = o === 'vertical'
-      ? { kind: 'bar', orientation: o, x: lo, y: base, w: thick, h: size, face, faces, edge, label: lbl, clip, sticky: true, legend: 'container' }
-      : { kind: 'bar', orientation: o, x: base, y: lo, w: size, h: thick, face, faces, edge, label: lbl, clip, sticky: true, legend: 'container' };
+      ? { kind: 'bar', orientation: o, x: lo, y: base, w: thick, h: size, face, faces, edge, label: lbl, clip, sticky: true, legend: 'container', zorder }
+      : { kind: 'bar', orientation: o, x: base, y: lo, w: size, h: thick, face, faces, edge, label: lbl, clip, sticky: true, legend: 'container', zorder };
     this.artists.push(bar);
     this.xaxis.request(); this.yaxis.request();
     return bar;
@@ -2032,7 +2033,9 @@ export class Axes {
     return sc;
   }
 
-  /** axvspan: vertical span in data x and axes-fraction y */
+  /** axvspan(xmin, xmax, { ymin, ymax, color, facecolor|fc, edgecolor|ec, linewidth|lw, linestyle|ls, alpha, label, clip_on, zorder }) — a
+   *  Rectangle from data x xmin to xmax over axes-fraction y ymin to ymax. linestyle dashes the edge (scaled by linewidth, as
+   *  Patch's are; 'None' draws no edge); zorder defaults to 1, as patches'. A labelled span is a legend child, as in matplotlib. */
   axvspan(xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SpanArtist {
     arity('axvspan', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'axvspan');
@@ -2046,16 +2049,18 @@ export class Axes {
     const alpha = kw.read(['alpha'], unitInterval('alpha'), () => -1);
     const lbl = kw.read(['label'], label, (): Label => ({ kind: 'none' }));
     const clip = kw.read(['clip_on', 'clipon', 'clip'], bool('clip_on'), () => true);
+    const edgeStyle = kw.read(['linestyle', 'ls'], parseLinestyle, (): Option<LineStyle> => some('solid'));
+    const zorder = kw.read(['zorder'], num('zorder'), () => 1);
     kw.done();
     const withAlpha = (p: Paint): Paint => (p.kind === 'solid' && alpha >= 0 ? { kind: 'solid', color: { hex: p.color.hex, alpha } } : p);
     const face = withAlpha(face0);
     let edgeColor = ec.kind === 'solid' ? ec.color : { hex: '#000000', alpha: 0 };
     if (ec.kind === 'solid') { const ea = withAlpha(ec); if (ea.kind === 'solid') edgeColor = ea.color; }
     const edge: BarEdge = ec.kind === 'solid' && lw > 0 ? { kind: 'on', color: edgeColor, widthPt: lw } : { kind: 'none' };
-    const sp: SpanArtist = { kind: 'span', orientation: 'vertical', a0: this.xaxis.convert(x0)[0], a1: this.xaxis.convert(x1)[0], f0: ymin, f1: ymax, face, edge, label: lbl, clip };
+    const sp: SpanArtist = { kind: 'span', orientation: 'vertical', a0: this.xaxis.convert(x0)[0], a1: this.xaxis.convert(x1)[0], f0: ymin, f1: ymax, face, edge, label: lbl, clip, edgeStyle, zorder };
     this.artists.push(sp); this.xaxis.request(); return sp;
   }
-  /** axhspan: horizontal span in data y and axes-fraction x */
+  /** axhspan(ymin, ymax, { xmin, xmax, …axvspan's }) — axvspan across: data y ymin to ymax over axes-fraction x xmin to xmax. */
   axhspan(ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SpanArtist {
     arity('axhspan', arguments.length, 2, true);
     const kw = new KwReader(kwargs, 'axhspan');
@@ -2068,13 +2073,15 @@ export class Axes {
     const alpha = kw.read(['alpha'], unitInterval('alpha'), () => -1);
     const lbl = kw.read(['label'], label, (): Label => ({ kind: 'none' }));
     const clip = kw.read(['clip_on', 'clipon', 'clip'], bool('clip_on'), () => true);
+    const edgeStyle = kw.read(['linestyle', 'ls'], parseLinestyle, (): Option<LineStyle> => some('solid'));
+    const zorder = kw.read(['zorder'], num('zorder'), () => 1);
     kw.done();
     const withAlpha = (p: Paint): Paint => (p.kind === 'solid' && alpha >= 0 ? { kind: 'solid', color: { hex: p.color.hex, alpha } } : p);
     const face = withAlpha(face0);
     let edgeColorH = ec.kind === 'solid' ? ec.color : { hex: '#000000', alpha: 0 };
     if (ec.kind === 'solid') { const ea = withAlpha(ec); if (ea.kind === 'solid') edgeColorH = ea.color; }
     const edge: BarEdge = ec.kind === 'solid' && lw > 0 ? { kind: 'on', color: edgeColorH, widthPt: lw } : { kind: 'none' };
-    const sp: SpanArtist = { kind: 'span', orientation: 'horizontal', a0: this.yaxis.convert(y0)[0], a1: this.yaxis.convert(y1)[0], f0: xmin, f1: xmax, face, edge, label: lbl, clip };
+    const sp: SpanArtist = { kind: 'span', orientation: 'horizontal', a0: this.yaxis.convert(y0)[0], a1: this.yaxis.convert(y1)[0], f0: xmin, f1: xmax, face, edge, label: lbl, clip, edgeStyle, zorder };
     this.artists.push(sp); this.yaxis.request(); return sp;
   }
 
@@ -2717,7 +2724,7 @@ export class Colorbar {
     const bar: BarArtist = {
       kind: 'bar', orientation,
       x, y, w, h, face: faces[0], faces, edge: { kind: 'none' },
-      label: { kind: 'none' }, clip: false, sticky: false, legend: 'container',
+      label: { kind: 'none' }, clip: false, sticky: false, legend: 'container', zorder: 1,
     };
     cax.artists.push(bar);
     // Colorbar outline spine: pointed path when extended (matplotlib._ColorbarSpine / _do_extends)

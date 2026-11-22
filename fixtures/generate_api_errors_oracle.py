@@ -84,6 +84,11 @@ for m in ("set_xticks", "set_yticks"):
     case(m, [T3, ["a", "b", "c"]], {"labels": ["d", "e", "f"]}, note="labels twice")
     case(m, [T3, 5], note="labels not iterable")
 
+# Issue #90: spans take linestyle/ls (a bad one is matplotlib's ValueError) and zorder; bars take zorder
+case("axvspan", [1, 2], {"linestyle": "zigzag"}, note="unknown linestyle")
+case("axhspan", [1, 2], {"ls": "--", "zorder": 0})
+case("bar", [[1, 2], [3, 4]], {"zorder": 3})
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

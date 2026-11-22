@@ -3,7 +3,7 @@
 // Works in Agg display coords (y up); converts to top-left only when emitting nodes.
 import type { Box } from './legend-index.ts';
 import { buildObstacleIndex } from './legend-index.ts';
-import { lineStroke, markersNode } from './marks.ts';
+import { dashFor, lineStroke, markersNode } from './marks.ts';
 import type { XY } from './path.ts';
 import { MOVE0 } from './path.ts';
 import { inkOf, pathNode, rectNode, snapIf, snapOffset } from './scene.ts';
@@ -234,13 +234,15 @@ function handleNodes(h: Handle, ox: number, oy: number, area: HandleArea, mk: Le
     case 'scatter': return scatterHandle(h, ox, oy, area, mk, k, tl, W, H, snapOn);
     case 'patch': {
       const stroke: Option<Stroke> = h.edge.kind === 'on' && h.edge.widthPt > 0
-        ? some({ color: h.edge.color, width: strokePx(h.edge.widthPt, k), cap: 'butt', join: 'miter', dash: { kind: 'solid' } })
+        ? some({ color: h.edge.color, width: strokePx(h.edge.widthPt, k), cap: 'butt', join: 'miter', dash: dashFor(theme, h.edgeStyle, h.edge.widthPt, k) })
         : none;
       const lw = stroke.kind === 'some' ? stroke.value.width : 0;
       const ink = inkOf(h.face, stroke);
       if (ink.kind === 'none') return [];
       const x0 = snap(ox, lw), x1 = snap(ox + wPx, lw);
       const yTop = snap(tl(oy - ydPx + hPx), lw), yBot = snap(tl(oy - ydPx), lw);
+      // dashes run from the path's first vertex: Rectangle((-xdescent, -ydescent), w, h) starts bottom left, then goes right
+      if (stroke.kind === 'some' && stroke.value.dash.kind === 'dashed') return [pathNode([['M', x0, yBot], ['L', x1, yBot], ['L', x1, yTop], ['L', x0, yTop], ['Z']], ink.value)];
       return [rectNode(x0, yTop, x1 - x0, yBot - yTop, ink.value)];
     }
     case 'collection': {
