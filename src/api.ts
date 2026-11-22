@@ -14,6 +14,8 @@ import type { Bins, Sample } from './core/histogram.ts';
 import { BIN_ESTIMATORS, histTops, npSum } from './core/histogram.ts';
 import type { Whis } from './core/boxplot.ts';
 import { boxplotStats, parseWhis, reshapeBoxplotData } from './core/boxplot.ts';
+import type { FillStep } from './core/fillbetween.ts';
+import { fillPolygons } from './core/fillbetween.ts';
 import type { PieWedge } from './core/pie.ts';
 import { pieLabelPos, pieWedges, pyPercentFormat, pyStrFormat } from './core/pie.ts';
 import { scaleOf } from './core/ticks.ts';
@@ -262,6 +264,14 @@ function bboxToAnchor(v: unknown): readonly [number, number, number, number] {
   }
   const n: readonly number[] = v.map(Number);
   return n.length === 2 ? [n[0], n[1], 0, 0] : [n[0], n[1], n[2], n[3]];
+}
+/** fill_between's where: one truth value per x (np.asarray(where, dtype=bool): numbers are true unless 0); another size is matplotlib's ValueError. */
+function parseWhere(v: unknown, n: number): readonly boolean[] {
+  if (!Array.isArray(v) || !v.every((b) => typeof b === 'boolean' || (typeof b === 'number' && !Number.isNaN(b)))) {
+    throw new TypeError(`fill_between(): where must be an array of booleans, got ${describeArg(v)}`);
+  }
+  if (v.length !== n) throw new Error(`where size (${v.length}) does not match 'x' size (${n})`);
+  return v.map((b) => b === true || (typeof b === 'number' && b !== 0));
 }
 /** A point (x, y), as matplotlib's xy tuples. */
 export type XY = readonly [number, number];
@@ -1758,17 +1768,27 @@ export class Axes {
     return bar;
   }
 
-  /** fill_between(x, y1, y2 = 0, { y2, color, alpha, label }) — a FillBetweenPolyCollection with no edges. A positional past y2,
-   *  or y2 given both ways, throws a TypeError. */
+  /**
+   * fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc, alpha, linewidth|lw,
+   * label, clip_on }) — a FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both
+   * hold, one polygon per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' |
+   * 'post' | 'mid') fills under a step(…, where=step) line. The positionals follow matplotlib's order; one given both ways is a
+   * TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
+   */
   fill_between(xRaw: unknown, y1Raw: unknown, ...rest: readonly unknown[]): FillArtist {
     // y2 is optional, so a trailing plain object is the kwargs, as in plot(); y2 may also be a keyword, as in matplotlib
-    const kw = new KwReader(bindPositional('fill_between', ['y2'], rest), 'fill_between');
+    const kw = new KwReader(bindPositional('fill_between', ['y2', 'where', 'interpolate', 'step'], rest), 'fill_between');
     const y2Raw = kw.read(['y2'], (v): Result<unknown> => ok(v), (): unknown => 0);
+    const whereRaw = kw.get(['where']);
+    const interpolate = kw.read(['interpolate'], bool('interpolate'), () => false);
+    const step = kw.read(['step'], (v): Result<Option<FillStep>> => (v === 'pre' || v === 'post' || v === 'mid' ? ok(some(v)) : err(`step must be 'pre', 'post' or 'mid', got ${JSON.stringify(v)}`)), (): Option<FillStep> => none);
     const x = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const n = x.length;
     const y1 = typeof y1Raw === 'number' ? new Float64Array(n).fill(y1Raw) : this.yaxis.convert(unwrap(parseSeries(y1Raw, 'y1')));
     const y2 = typeof y2Raw === 'number' ? new Float64Array(n).fill(y2Raw) : this.yaxis.convert(unwrap(parseSeries(y2Raw, 'y2')));
     if (y1.length !== n || y2.length !== n) throw new RangeError(`fill_between: x, y1 and y2 must have the same length, got ${n}, ${y1.length}, ${y2.length}`);
+    // _get_data_mask: np.asarray(where, dtype=bool), the same size as x
+    const where: readonly boolean[] = whereRaw.kind === 'none' ? Array.from({ length: n }, () => true) : parseWhere(whereRaw.value, n);
     const both = kw.read(['color'], (v) => this.paint(v).ok ? ok(some(unwrap(this.paint(v)))) : err('bad color'), (): Option<Paint> => none);
     const face0 = kw.read(['facecolor', 'fc'], this.paint, (): Paint => (both.kind === 'some' ? both.value : { kind: 'solid', color: this.next('patch') }));
     const alpha = kw.read(['alpha'], unitInterval('alpha'), () => -1);
@@ -1783,7 +1803,8 @@ export class Axes {
     const forced: Paint = this.theme.patch.forceEdge ? { kind: 'solid', color: this.theme.patch.edge } : { kind: 'none' };
     const edgeP = withAlpha(both.kind === 'some' ? both.value : forced);
     const edge: BarEdge = edgeP.kind === 'solid' && edgeP.color.alpha > 0 ? { kind: 'on', color: edgeP.color, widthPt: Math.max(0, lw) } : { kind: 'none' };
-    const fill: FillArtist = { kind: 'fill', x, y1, y2, face, edge, label: lbl, clip };
+    const keep = (v: Float64Array): Float64Array => v.filter((_, i) => where[i]);
+    const fill: FillArtist = { kind: 'fill', x: keep(x), y1: keep(y1), y2: keep(y2), polygons: fillPolygons(x, y1, y2, where, step, interpolate), face, edge, label: lbl, clip };
     this.artists.push(fill);
     this.xaxis.request(); this.yaxis.request();
     return fill;

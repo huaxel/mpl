@@ -1068,6 +1068,30 @@ case("legend_bbox_best_in_box", *LEG3, ("legend", [], {"loc": "best", "bbox_to_a
 case("legend_bbox_below_tight", *LEG3, ("set_xlabel", ["x"]), ("legend", [], {"loc": "upper center", "bbox_to_anchor": [0.5, -0.15], "ncols": 3}),
      ("fig.tight_layout", []))
 
+# Issue #92: fill_between step ('pre' | 'post' | 'mid'), where (one polygon per run) and interpolate, alone and together
+SX = [0, 1, 2, 3, 4, 5, 6, 7]
+SY = [1, 3, 2, 4, 3, 5, 2, 3]
+case("fill_between_step_kinds", ("$subplots", [1, 3], {"figsize": [9, 3]}),
+     ("fill_between", [SX, SY], {"step": "pre", "alpha": 0.4}), ("step", [SX, SY], {"where": "pre"}), ("set_title", ["pre"]),
+     ("sca", [1]), ("fill_between", [SX, SY], {"step": "post", "alpha": 0.4}), ("step", [SX, SY], {"where": "post"}), ("set_title", ["post"]),
+     ("sca", [2]), ("fill_between", [SX, SY, 1], {"step": "mid", "alpha": 0.4}), ("step", [SX, SY], {"where": "mid"}), ("set_title", ["mid"]))
+WX = lin(40, 0, 4 * math.pi)
+WY1 = [round(math.sin(v), 6) for v in WX]
+WY2 = [round(0.4 * math.cos(v * 0.7), 6) for v in WX]
+ABOVE = [a > b for a, b in zip(WY1, WY2)]
+BELOW = [a <= b for a, b in zip(WY1, WY2)]
+case("fill_between_where", ("plot", [WX, WY1], {"color": "k", "lw": 1}), ("plot", [WX, WY2], {"color": "k", "lw": 1}),
+     ("fill_between", [WX, WY1, WY2], {"where": ABOVE, "color": "C2", "alpha": 0.5, "label": "above"}),
+     ("fill_between", [WX, WY1, WY2], {"where": BELOW, "facecolor": "C3", "alpha": 0.5, "label": "below"}), ("legend", []))
+case("fill_between_where_interpolate", ("plot", [WX, WY1], {"color": "k", "lw": 1}), ("plot", [WX, WY2], {"color": "k", "lw": 1}),
+     ("fill_between", [WX, WY1, WY2, ABOVE], {"interpolate": True, "color": "C2", "alpha": 0.5}),
+     ("fill_between", [WX, WY1, WY2], {"where": BELOW, "interpolate": True, "facecolor": "C3", "alpha": 0.5}))
+case("fill_between_step_where_interpolate", ("plot", [SX, SY], {"drawstyle": "steps-post", "color": "k"}),
+     ("fill_between", [SX, SY, 2.5], {"where": [v > 2.5 for v in SY], "interpolate": True, "step": "post", "color": "C0", "alpha": 0.4}),
+     ("fill_between", [SX, SY, 2.5], {"where": [v <= 2.5 for v in SY], "step": "pre", "color": "C1", "alpha": 0.4, "linewidth": 2}))
+case("fill_between_step_dates", ("fill_between", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190]], {"step": "post", "alpha": 0.35, "label": "bytes"}),
+     ("step", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190]], {"where": "post"}), ("set_ylabel", ["KiB"]), ("fig.autofmt_xdate", []))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

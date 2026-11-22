@@ -37,8 +37,9 @@ for (const c of ORACLE.cases) {
     // Text.set()/Artist.set() reject an unknown property with AttributeError; mpl's unknown keyword is a TypeError
     rejected++;
     check(e instanceof TypeError && /unexpected keyword argument/.test(e.message), `${show(c)}: matplotlib raises AttributeError (${c.note}); mpl ${e === null ? 'accepted it' : `threw ${e.name}: ${e.message}`}`);
-  } else if (c.raises === 'ValueError') {
-    // a ValueError is a plain Error in mpl (mpl-web answers 400), never a TypeError or RangeError
+  } else if (c.raises === 'ValueError' || c.raises === 'KeyError') {
+    // a ValueError (or a bad option's KeyError, as fill_between's step lookup raises) is a plain Error in mpl (mpl-web answers
+    // 400), never a TypeError or RangeError
     rejected++;
     check(e !== null && e.constructor === Error, `${show(c)}: matplotlib raises ValueError (${c.note}); mpl ${e === null ? 'accepted it' : `threw ${e.name}: ${e.message}`}`);
   } else {

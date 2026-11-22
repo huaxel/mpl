@@ -93,6 +93,15 @@ case("bar", [[1, 2], [3, 4]], {"zorder": 3})
 case("legend", [], {"bbox_to_anchor": [0, 1.02], "loc": "lower left"})
 case("legend", [], {"bbox_to_anchor": [0, 1, 0.5]}, note="3 numbers")
 
+# Issue #92: fill_between(x, y1, y2, where, interpolate, step); where must match x in size
+FX, FY = [0, 1, 2, 3], [1, 3, 2, 4]
+case("fill_between", [FX, FY, 0, [True, True, False, True]])
+case("fill_between", [FX, FY, 0, [True, False, True, True], True, "post"])
+case("fill_between", [FX, FY], {"where": [True, True]}, note="where shorter than x")
+case("fill_between", [FX, FY, 0, [True, True, True, True]], {"where": [True, True, True, True]}, note="where twice")
+case("fill_between", [FX, FY], {"step": "sideways"}, note="unknown step")
+case("fill_between", [FX, FY, 0, None, False, "mid", 1], note="a positional past step")
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

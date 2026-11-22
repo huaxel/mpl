@@ -316,9 +316,9 @@ Keyword arguments (unknown keys throw): `height`, `left`, `align`, `color | face
 
 ### `Axes.fill_between(xRaw, y1Raw, ...rest)`
 
-fill_between(x, y1, y2 = 0, { y2, color, alpha, label }) — a FillBetweenPolyCollection with no edges. A positional past y2, or y2 given both ways, throws a TypeError.
+fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc, alpha, linewidth|lw, label, clip_on }) — a FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both hold, one polygon per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' | 'post' | 'mid') fills under a step(…, where=step) line. The positionals follow matplotlib's order; one given both ways is a TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
 
-Keyword arguments (unknown keys throw): `y2`, `color`, `facecolor | fc`, `alpha`, `linewidth | lw`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `y2`, `where`, `interpolate`, `step`, `color`, `facecolor | fc`, `alpha`, `linewidth | lw`, `label`, `clip_on | clipon | clip`
 
 ### `Axes.get transData()`
 

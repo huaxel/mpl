@@ -307,41 +307,42 @@ export function drawBar(a: BarArtist, f: Frame, k: number, clip: Clip, span: Spa
  * closed. Vertices go through the same folded affine as lines; Agg fills with the non-zero rule.
  */
 export function drawFill(a: FillArtist, f: Frame, k: number, clip: Clip): Drawn {
-  const n = Math.min(a.x.length, a.y1.length, a.y2.length);
   const handle = handleOf(a);
   // GraphicsContext defaults for collections: butt caps, round joins
   const stroke: Option<Stroke> = a.edge.kind === 'on' && a.edge.widthPt > 0 ? some({ color: a.edge.color, width: strokePx(a.edge.widthPt, k), cap: 'butt', join: 'round', dash: { kind: 'solid' } }) : none;
   const ink = inkOf(a.face, stroke);
-  if (n === 0 || ink.kind === 'none') return { nodes: [], lines: [], boxes: [], points: [], paths: [], handle };
-  // Two code paths in Collection.draw. With edges (a single edge color), the single-path
-  // optimization draws the polygon with draw_markers: one "marker" at offset (0, 0), which Agg
-  // places at pixel (0, H), its path shifted by (0.5, 0.5) since a curvy polygon doesn't snap.
-  // Without edges (edgecolor 'none' is an empty array) it goes through draw_path_collection,
-  // i.e. an ordinary path: y = y·(−ay) + (H − cy).
-  const asMarker = a.edge.kind === 'on';
-  const X = forwardAll(f.xscale, a.x), Y1 = forwardAll(f.yscale, a.y1), Y2 = forwardAll(f.yscale, a.y2);
+  if (a.polygons.length === 0 || ink.kind === 'none') return { nodes: [], lines: [], boxes: [], points: [], paths: [], handle };
+  // Two code paths in Collection.draw. One path with edges (a single edge color) takes the single-path optimization:
+  // draw_markers, one "marker" at offset (0, 0), which Agg places at pixel (0, H), its path shifted by (0.5, 0.5) since a
+  // curvy polygon doesn't snap. Without edges (edgecolor 'none' is an empty array), or with several paths (one per run of
+  // `where`), it goes through draw_path_collection, i.e. ordinary paths: y = y·(−ay) + (H − cy).
+  const asMarker = a.edge.kind === 'on' && a.polygons.length === 1;
   const ty0 = asMarker ? -f.cy : f.Hg - f.cy, nay = -f.ay;
-  const ptsX: number[] = [X[0] * f.ax + f.cx], ptsY: number[] = [Y2[0] * nay + ty0];
-  const push = (x: number, y: number): void => { ptsX.push(x * f.ax + f.cx); ptsY.push(y * nay + ty0); };
-  for (let i = 0; i < n; i++) push(X[i], Y1[i]);
-  push(X[n - 1], Y2[n - 1]);
-  for (let i = n - 1; i >= 0; i--) push(X[i], Y2[i]);
-  // PathSnapper, SNAP_AUTO: a path of ≤ 1024 vertices (with the close) whose segments are all
-  // axis-aligned within 1e-4 px snaps to floor(v + 0.5) + (odd rounded stroke width ? 0.5 : 0).
-  // An edgeless collection snaps as width 0 (fixtures fill_rect_snap at 100 and 150 dpi). An
-  // unsnapped path through draw_markers takes the plain +0.5 shift.
-  let rectilinear = ptsX.length + 1 <= 1024;
-  for (let i = 1; i < ptsX.length && rectilinear; i++) rectilinear = Math.abs(ptsX[i] - ptsX[i - 1]) < 1e-4 || Math.abs(ptsY[i] - ptsY[i - 1]) < 1e-4;
+  // PathSnapper, SNAP_AUTO: a path of ≤ 1024 vertices (with the close) whose segments are all axis-aligned within 1e-4 px
+  // snaps to floor(v + 0.5) + (odd rounded stroke width ? 0.5 : 0). An edgeless collection snaps as width 0 (fixtures
+  // fill_rect_snap at 100 and 150 dpi). An unsnapped path through draw_markers takes the plain +0.5 shift.
   const off = a.edge.kind === 'on' ? snapOffset(strokePx(a.edge.widthPt, k)) : 0;
-  const fix = (v: number): number => (!f.snap ? v : rectilinear ? Math.floor(v + 0.5) + off : asMarker ? v + 0.5 : v);
-  const segs: Seg[] = ptsX.map((x, i): Seg => [i === 0 ? 'M' : 'L', fix(x), fix(ptsY[i])]);
-  segs.push(['Z']);
-  const up = new Float64Array(2 * n), xs = new Float64Array(2 * n);
-  for (let i = 0; i < n; i++) { xs[i] = X[i] * f.ax + f.cx; up[i] = Y1[i] * f.ay + f.cy; xs[n + i] = X[n - 1 - i] * f.ax + f.cx; up[n + i] = Y2[n - 1 - i] * f.ay + f.cy; }
-  const node: Node = asMarker
-    ? { kind: 'markers', shape: segs, xs: Float64Array.of(0), ys: Float64Array.of(f.Hg), ink: ink.value }
-    : { kind: 'path', segs, ink: ink.value, antialiased: true };
-  return { nodes: [{ kind: 'group', clip, nodes: [node], tag: '' }], lines: [{ xs, ys: up }], boxes: [], points: [], paths: [], handle };
+  const nodes: Node[] = [];
+  const lines: { xs: Float64Array; ys: Float64Array }[] = [];
+  for (const poly of a.polygons) {
+    const X = forwardAll(f.xscale, poly.x), Y = forwardAll(f.yscale, poly.y);
+    const m = X.length;
+    const ptsX = new Float64Array(m), ptsY = new Float64Array(m);
+    for (let i = 0; i < m; i++) { ptsX[i] = X[i] * f.ax + f.cx; ptsY[i] = Y[i] * nay + ty0; }
+    let rectilinear = m + 1 <= 1024;
+    for (let i = 1; i < m && rectilinear; i++) rectilinear = Math.abs(ptsX[i] - ptsX[i - 1]) < 1e-4 || Math.abs(ptsY[i] - ptsY[i - 1]) < 1e-4;
+    const fix = (v: number): number => (!f.snap ? v : rectilinear ? Math.floor(v + 0.5) + off : asMarker ? v + 0.5 : v);
+    const segs: Seg[] = Array.from(ptsX, (x, i): Seg => [i === 0 ? 'M' : 'L', fix(x), fix(ptsY[i])]);
+    segs.push(['Z']);
+    nodes.push(asMarker
+      ? { kind: 'markers', shape: segs, xs: Float64Array.of(0), ys: Float64Array.of(f.Hg), ink: ink.value }
+      : { kind: 'path', segs, ink: ink.value, antialiased: true });
+    // the legend's 'best' obstacles: each polygon's path, closed (PolyCollection paths end on their first vertex)
+    const xs = new Float64Array(m + 1), up = new Float64Array(m + 1);
+    for (let i = 0; i <= m; i++) { const q = i % m; xs[i] = X[q] * f.ax + f.cx; up[i] = Y[q] * f.ay + f.cy; }
+    lines.push({ xs, ys: up });
+  }
+  return { nodes: [{ kind: 'group', clip, nodes, tag: '' }], lines, boxes: [], points: [], paths: [], handle };
 }
 
 /** ax.text: position through transData or transAxes (Python-side, then flipped), laid out like Text. */
