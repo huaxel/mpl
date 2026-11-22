@@ -20,7 +20,7 @@ import { measure, placeText, pxPerPt, windowExtent } from './text.ts';
 import { resolveFace } from './fonts.ts';
 import type { TickSet } from './ticks.ts';
 import { computeTicks, scaleOf, tickSpace } from './ticks.ts';
-import type { HAlign, Option, Artist, AxesMeta, AxesRole, AxesSpec, AxisBelow, AxisMeta, Clip, FigureSpec, LegendEntry, Node, Placement, Position, PxBox, Rgb, TightBox, Scale, Scene, Stroke, Theme, TickTheme } from './types.ts';
+import type { AxisLabelStyle, HAlign, Option, Artist, AxesMeta, AxesRole, AxesSpec, AxisBelow, AxisMeta, Clip, FigureSpec, LegendEntry, Node, Placement, Position, PxBox, Rgb, TightBox, Scale, Scene, Stroke, Theme, TickTheme } from './types.ts';
 import { assertNever, none, some } from './types.ts';
 import type { Tracer } from '../trace.ts';
 
@@ -261,7 +261,18 @@ function decorations(ax: AxesSpec, roles: Roles, theme: Theme, f: Frame, k: numb
     out.push(...labelNodes(tb, k, color));
     return some({ x0: tb.x0, y0: tb.y0, x1: tb.x1, y1: tb.y1 });
   };
-  const pad = theme.offsetTextPadPt * k, lp = A.labelPadPt * k;
+  const pad = theme.offsetTextPadPt * k;
+  // set_xlabel / set_ylabel: the label's text properties over the rc defaults, its labelpad, and loc (x = 0 / 0.5 / 1 of the
+  // axes with ha = loc; for y, y = 0 / 0.5 / 1 with ha left / center / right along the rotated text)
+  const labelOf = (st: AxisLabelStyle) => {
+    const padPt = st.padPt.kind === 'some' ? st.padPt.value : A.labelPadPt;
+    return { sizePt: st.sizePt.kind === 'some' ? st.sizePt.value : A.labelSizePt, color: st.color.kind === 'some' ? st.color.value : A.labelColor,
+             weight: st.weight.kind === 'some' ? st.weight.value : theme.font.labelWeight, padPt, pad: padPt * k,
+             ha: st.loc === 'start' ? 'left' as const : st.loc === 'end' ? 'right' as const : 'center' as const };
+  };
+  const xl = labelOf(ax.labelStyle.x), yl = labelOf(ax.labelStyle.y);
+  const XL = { ...xl, x: ax.labelStyle.x.loc === 'center' ? b.x0 + (b.x1 - b.x0) / 2 : ax.labelStyle.x.loc === 'start' ? b.x0 : (b.x1 - b.x0) + b.x0 };
+  const YL = { ...yl, y: ax.labelStyle.y.loc === 'center' ? b.yTop + (b.yBot - b.yTop) / 2 : ax.labelStyle.y.loc === 'start' ? b.yBot : b.yTop };
   const xBoxes: PxBox[] = [], yBoxes: PxBox[] = [], xUp: UpEdges[] = [];
   // the same text's bottom edge in display y-up: XAxis._update_{offset_text,label}_position anchor it at
   // union(tick labels, spine).y0 − pad·dpi/72, then Text.get_window_extent (va='top')
@@ -283,9 +294,9 @@ function decorations(ax: AxesSpec, roles: Roles, theme: Theme, f: Frame, k: numb
       xBoxes.push(...o);
       if (o.length > 0) xUp.push(topUp(xt.offset, b.x1, offFromUp, theme.offsetTextPadPt, 'right', 'bottom', theme.xtick.labelSizePt, theme.font.weight));
     }
-    const l = optBox(put(ax.xlabel, b.x0 + (b.x1 - b.x0) / 2, top - lp, { kind: 'horizontal', ha: 'center', va: 'baseline' }, A.labelSizePt, A.labelColor, theme.font.labelWeight), collapseX);
+    const l = optBox(put(ax.xlabel, XL.x, top - XL.pad, { kind: 'horizontal', ha: XL.ha, va: 'baseline' }, XL.sizePt, XL.color, XL.weight), collapseX);
     xBoxes.push(...l);
-    if (l.length > 0) xUp.push(topUp(ax.xlabel, b.x0 + (b.x1 - b.x0) / 2, topLabelsUp, A.labelPadPt, 'center', 'baseline', A.labelSizePt, theme.font.labelWeight));
+    if (l.length > 0) xUp.push(topUp(ax.xlabel, XL.x, topLabelsUp, XL.padPt, XL.ha, 'baseline', XL.sizePt, XL.weight));
   } else if (roles.x.kind === 'shown') {
     // the bottom spine's extent (where set_position put it) joins the tick labels'
     let bottom = sp.yBottom + half;
@@ -295,9 +306,9 @@ function decorations(ax: AxesSpec, roles: Roles, theme: Theme, f: Frame, k: numb
       xBoxes.push(...o);
       if (o.length > 0) xUp.push(bottomUp(xt.offset, b.x1, theme.offsetTextPadPt, 'right', theme.xtick.labelSizePt, theme.font.weight));
     }
-    const l = optBox(put(ax.xlabel, b.x0 + (b.x1 - b.x0) / 2, bottom + lp, { kind: 'horizontal', ha: 'center', va: 'top' }, A.labelSizePt, A.labelColor, theme.font.labelWeight), collapseX);
+    const l = optBox(put(ax.xlabel, XL.x, bottom + XL.pad, { kind: 'horizontal', ha: XL.ha, va: 'top' }, XL.sizePt, XL.color, XL.weight), collapseX);
     xBoxes.push(...l);
-    if (l.length > 0) xUp.push(bottomUp(ax.xlabel, b.x0 + (b.x1 - b.x0) / 2, A.labelPadPt, 'center', A.labelSizePt, theme.font.labelWeight));
+    if (l.length > 0) xUp.push(bottomUp(ax.xlabel, XL.x, XL.padPt, XL.ha, XL.sizePt, XL.weight));
   }
   out = yOut;
   // the y label and offset text belong to the YAxis, which axison off leaves out (roles.y is hidden then)
@@ -305,12 +316,12 @@ function decorations(ax: AxesSpec, roles: Roles, theme: Theme, f: Frame, k: numb
     let right = sp.xRight + half;
     for (const lb of yb.far) right = Math.max(right, lb.x1);
     if (!ax.hiddenLabels.y) yBoxes.push(...optBox(put(yt.offset, b.x1, b.yTop - pad, { kind: 'horizontal', ha: 'right', va: 'baseline' }, theme.ytick.labelSizePt, theme.ytick.color)));
-    yBoxes.push(...optBox(put(ax.ylabel, right + lp, b.yTop + (b.yBot - b.yTop) / 2, { kind: 'ylabelRight' }, A.labelSizePt, A.labelColor, theme.font.labelWeight), collapseY));
+    yBoxes.push(...optBox(put(ax.ylabel, right + YL.pad, YL.y, { kind: 'ylabelRight', ha: YL.ha }, YL.sizePt, YL.color, YL.weight), collapseY));
   } else if (ax.axisOn) {
     let left = sp.xLeft - half;
     for (const lb of yb.near) left = Math.min(left, lb.x0);
     if (!ax.hiddenLabels.y) yBoxes.push(...optBox(put(yt.offset, b.x0, b.yTop - pad, { kind: 'horizontal', ha: 'left', va: 'baseline' }, theme.ytick.labelSizePt, theme.ytick.color)));
-    yBoxes.push(...optBox(put(ax.ylabel, left - lp, b.yTop + (b.yBot - b.yTop) / 2, { kind: 'ylabel' }, A.labelSizePt, A.labelColor, theme.font.labelWeight), collapseY));
+    yBoxes.push(...optBox(put(ax.ylabel, left - YL.pad, YL.y, { kind: 'ylabel', ha: YL.ha }, YL.sizePt, YL.color, YL.weight), collapseY));
   }
   // Axes.get_children: title, _left_title, _right_title (all zorder 3, drawn in that order)
   out = titleOut;

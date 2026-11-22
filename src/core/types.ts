@@ -99,11 +99,16 @@ export type TickLabel =
 // ---------------------------------------------------------------- text placement
 export type HAlign = 'left' | 'center' | 'right';
 export type VAlign = 'top' | 'bottom' | 'center' | 'baseline' | 'center_baseline';
+/** An axis label's text properties (none: the rc default) and loc: start is 'left' / 'bottom', end 'right' / 'top'. */
+export type AxisLabelStyle = {
+  readonly sizePt: Option<number>; readonly color: Option<Rgb>; readonly weight: Option<number>; readonly padPt: Option<number>;
+  readonly loc: 'start' | 'center' | 'end';
+};
 /** Text placement: horizontal, 90° ylabel, or arbitrary-angle (rotation_mode='default'). */
 export type Placement =
   | { readonly kind: 'horizontal'; readonly ha: HAlign; readonly va: VAlign }
-  | { readonly kind: 'ylabel' }          // left y label: rotation 90, va bottom
-  | { readonly kind: 'ylabelRight' }    // right y label (twinx): rotation 90, va top
+  | { readonly kind: 'ylabel'; readonly ha: HAlign }          // left y label: rotation 90, va bottom, rotation_mode anchor
+  | { readonly kind: 'ylabelRight'; readonly ha: HAlign }    // right y label (twinx): rotation 90, va top, rotation_mode anchor
   /** rotation 90, rotation_mode='default': ha/va align the rotated box on (x, y) */
   | { readonly kind: 'vertical'; readonly ha: HAlign; readonly va: VAlign }
   /** Arbitrary degrees CCW; rotation_mode='default' (align the rotated AABB). */
@@ -435,6 +440,8 @@ export type Position = readonly [number, number, number, number];
 export type AxesSpec = {
   readonly role: AxesRole; readonly position: Position; readonly artists: readonly Artist[];
   readonly titles: AxesTitles; readonly xlabel: string; readonly ylabel: string;
+  /** set_xlabel / set_ylabel: the label Text's properties (kept across calls, as the Axis label is one Text) and its loc */
+  readonly labelStyle: { readonly x: AxisLabelStyle; readonly y: AxisLabelStyle };
   readonly x: AxisSpec; readonly y: AxisSpec; readonly grid: AxesGrid; readonly legend: LegendSpec;
   /** set_aspect: applied at draw (adjustable='box'). */
   readonly aspect: Aspect;

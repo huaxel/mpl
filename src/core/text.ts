@@ -187,14 +187,14 @@ export function placeLayout(m: LabelLayout, x: number, y: number, p: Placement):
       return { x0, y0: top, x1: x0 + m.width, y1: top + H, penX: x0, penY: top + m.ascent, rotation: 'horizontal', runs: m.runs };
     }
     case 'ylabel': {
-      // rotation=90, ha=center, va=bottom (measured on 3.11.2): the rotated box spans
-      // x ∈ [x-H, x], centred vertically on the anchor; baseline is the line x - descent.
-      const top = y - m.width / 2;
+      // rotation=90, va=bottom, rotation_mode='anchor' (measured on 3.11.2): the rotated box spans x ∈ [x-H, x]; ha aligns
+      // along the text, so centre is centred on the anchor, left starts there (loc='bottom'), right ends there ('top')
+      const top = p.ha === 'center' ? y - m.width / 2 : p.ha === 'left' ? y - m.width : y;
       return { x0: x - H, y0: top, x1: x, y1: top + m.width, penX: x - m.descent, penY: top + m.width, rotation: 'vertical', runs: m.runs };
     }
     case 'ylabelRight': {
-      // rotation=90, ha=center, va=top (label_position='right'): box spans x ∈ [x, x+H]; baseline at x + ascent.
-      const top = y - m.width / 2;
+      // rotation=90, va=top (label_position='right'): box spans x ∈ [x, x+H]; baseline at x + ascent; ha as for 'ylabel'
+      const top = p.ha === 'center' ? y - m.width / 2 : p.ha === 'left' ? y - m.width : y;
       return { x0: x, y0: top, x1: x + H, y1: top + m.width, penX: x + m.ascent, penY: top + m.width, rotation: 'vertical', runs: m.runs };
     }
     case 'vertical': {

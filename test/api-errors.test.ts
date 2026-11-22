@@ -97,7 +97,6 @@ for (const [what, f] of notKw) {
 }
 // methods without a keyword object reject one, instead of ignoring it (set_xlabel's fontsize was dropped)
 for (const [what, f] of [
-  ['set_xlabel("x", { fontsize: 20 })', () => (subplots()[1] as unknown as Dyn)['set_xlabel']?.('x', { fontsize: 20 })],
   ['set_yscale("log", { base: 2 })', () => (subplots()[1] as unknown as Dyn)['set_yscale']?.('log', { base: 2 })],
 ] as const) {
   try { f(); check(false, `${what}: accepted an argument it ignores`); } catch (e) {

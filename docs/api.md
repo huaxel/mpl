@@ -398,13 +398,17 @@ Tick parameters: axis {'x','y','both'}, which {'major','minor','both'}, length, 
 
 Keyword arguments (unknown keys throw): `axis`, `which`, `length`, `width`, `colors | color`, `labelsize`, `bottom`, `top`, `left`, `right`, `labelbottom`, `labelleft`, `pad`, `direction`
 
-### `Axes.set_xlabel(s)`
+### `Axes.set_xlabel(s, ...rest)`
 
-set_xlabel(s) — x axis label; '\n' starts a new line.
+set_xlabel(label, fontdict?, labelpad?, { fontdict, labelpad, loc, color|c, fontsize|size, fontweight|weight }) — the x axis label; '\n' starts a new line. As in matplotlib the label is one Text, so its properties and labelpad stay for later calls, while loc ('left' | 'center' | 'right', the label's x and ha) is set on every call. fontdict merges under the keywords.
 
-### `Axes.set_ylabel(s)`
+Keyword arguments (unknown keys throw): `labelpad`, `loc`, `fontsize | size`, `fontweight | weight`, `color | c`
 
-set_ylabel(s) — y axis label, rotated 90°; '\n' starts a new line.
+### `Axes.set_ylabel(s, ...rest)`
+
+set_ylabel(label, fontdict?, labelpad?, { …set_xlabel's, loc: 'bottom' | 'center' | 'top' }) — the y axis label, rotated 90°.
+
+Keyword arguments (unknown keys throw): `labelpad`, `loc`, `fontsize | size`, `fontweight | weight`, `color | c`
 
 ### `Axes.set_xlim(...args)`
 

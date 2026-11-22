@@ -2215,6 +2215,80 @@
    "raises": null,
    "message": null,
    "note": ""
+  },
+  {
+   "call": [
+    "set_xlabel",
+    [
+     "x",
+     {
+      "fontsize": 12
+     },
+     5
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_xlabel",
+    [
+     "x"
+    ],
+    {
+     "loc": "middle"
+    }
+   ],
+   "raises": "ValueError",
+   "message": "'middle' is not a valid value for loc. Supported values are 'left', 'center', 'right'",
+   "note": "unknown loc"
+  },
+  {
+   "call": [
+    "set_ylabel",
+    [
+     "y"
+    ],
+    {
+     "loc": "left"
+    }
+   ],
+   "raises": "ValueError",
+   "message": "'left' is not a valid value for loc. Supported values are 'bottom', 'center', 'top'",
+   "note": "an x loc on y"
+  },
+  {
+   "call": [
+    "set_ylabel",
+    [
+     "y",
+     null,
+     4
+    ],
+    {
+     "labelpad": 2
+    }
+   ],
+   "raises": "TypeError",
+   "message": "_AxesBase.set_ylabel() got multiple values for argument 'labelpad'",
+   "note": "labelpad twice"
+  },
+  {
+   "call": [
+    "set_xlabel",
+    [
+     "x"
+    ],
+    {
+     "bogus": 1
+    }
+   ],
+   "raises": "AttributeError",
+   "message": "'Text' object has no property 'bogus'",
+   "note": "not a Text property"
   }
  ]
 }

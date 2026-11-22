@@ -1138,6 +1138,19 @@ case("positional_text_fontdict", ("plot", [x, sx]),
      ("annotate", ["peak", [1.6, 1.0], [3, 1.3], "data", "data", {"arrowstyle": "->", "color": "C3"}], {"fontsize": 9}))
 case("positional_autofmt", ("plot", [dates("2025-01-01", 6, (1, "D")), [1, 3, 2, 5, 4, 6]]), ("fig.autofmt_xdate", [0.25, 45, "center"]))
 
+# Issue #97: set_xlabel / set_ylabel take fontdict, labelpad, loc and text properties (the label Text keeps them across calls)
+case("axis_label_props", ("plot", [x, sx]),
+     ("set_xlabel", ["time (s)"], {"fontsize": 14, "color": "C3", "fontweight": "bold"}),
+     ("set_ylabel", ["value", {"fontsize": 9, "color": "C2"}, 15]))
+case("axis_label_loc", ("$subplots", [1, 2], {"figsize": [9, 3.5]}),
+     ("plot", [x, sx]), ("set_xlabel", ["left x"], {"loc": "left"}), ("set_ylabel", ["top y"], {"loc": "top"}),
+     ("sca", [1]), ("plot", [x, cx]), ("set_xlabel", ["right x"], {"loc": "right", "labelpad": 2}), ("set_ylabel", ["bottom y"], {"loc": "bottom"}),
+     ("twinx", []), ("plot", [x, sx], {"color": "C1"}), ("set_ylabel", ["twin top"], {"loc": "top", "color": "C1"}),
+     ("fig.tight_layout", []))
+case("axis_label_keeps_props", ("plot", [x, sx]),
+     ("set_xlabel", ["first"], {"fontsize": 16, "labelpad": 12}), ("set_xlabel", ["second keeps size and pad"]),
+     ("set_ylabel", ["y"], {"fontdict": {"fontsize": 13}, "fontsize": 8}))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

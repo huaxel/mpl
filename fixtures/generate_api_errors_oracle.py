@@ -136,6 +136,13 @@ case("fig.text", [0.1, 0.1, "s", {"color": "r"}])
 case("fig.subplots_adjust", [0.1, 0.1, 0.9, 0.9])
 case("fig.autofmt_xdate", [0.2, 30, "right"])
 
+# Issue #97: set_xlabel(xlabel, fontdict, labelpad, *, loc, **kwargs)
+case("set_xlabel", ["x", {"fontsize": 12}, 5])
+case("set_xlabel", ["x"], {"loc": "middle"}, note="unknown loc")
+case("set_ylabel", ["y"], {"loc": "left"}, note="an x loc on y")
+case("set_ylabel", ["y", None, 4], {"labelpad": 2}, note="labelpad twice")
+case("set_xlabel", ["x"], {"bogus": 1}, note="not a Text property")
+
 with open(OUT, "w") as f:
     json.dump({"matplotlib": matplotlib.__version__, "cases": cases}, f, indent=1)
     f.write("\n")

@@ -35,7 +35,7 @@ import type { StyleSpec } from './core/style.ts';
 import { composeStyles } from './core/style.ts';
 import { parseFontSize, parseLegendLoc, parseTheme, scatterPointsOf } from './core/theme.ts';
 import type {
-  AnnotationArrow,
+  AnnotationArrow, AxisLabelStyle,
   Artist, Aspect, AxesMeta, AxesTitle, AxesTitles, DateLocatorSpec, SpinePosition, AxesRole, AxesSpec, AxisSpec, BarArtist, FillArtist, HAlign, TextArtist, TextCoords, VAlign, BarEdge, FigureSpec, AxesGrid, AxisGrid, GridLines, GridWhich, Label, LabelSpec, LegendSpec, Limits,
   AxLineArtist, AxLineThrough, Decimate, DrawStyle, ErrorbarArtist, ErrorbarHandle, LineCoords, PolygonArtist, SegmentsArtist, StickyArtist, WedgeArtist,
   Cap, LineArtist, LineMarkers, LineStroke, LineStyle, MarkerName, Option, Orientation, Paint, Position, TightBox, Result, Rgb, Scale, Scene, Theme, TickSpec, TickGrid, TickLabelStyle, TickLabelStyles, ScatterArtist, ImageArtist, SpanArtist, TickTheme, AnnotationArtist, AnnotationCoords, AnnotationCoordPair,
@@ -285,6 +285,9 @@ function parseWhere(v: unknown, n: number): readonly boolean[] {
 const isGiven = (o: Option<unknown>): boolean => o.kind === 'some';
 /** An Axis' view limits once settled (an autoscaled axis with nothing to scale reads [0, 1]). */
 const viewOf = (ax: Axis): readonly [number, number] => (ax.limits.kind === 'auto' ? [0, 1] : [ax.limits.lo, ax.limits.hi]);
+/** A new value when given, else the old one (a property set on a Text stays until set again). */
+const keepSet = <T>(n: Option<T>, o: Option<T>): Option<T> => (n.kind === 'some' ? n : o);
+const NO_LABEL_STYLE: AxisLabelStyle = { sizePt: none, color: none, weight: none, padPt: none, loc: 'center' };
 /** A point (x, y), as matplotlib's xy tuples. */
 export type XY = readonly [number, number];
 const DATA_COORDS: LineCoords = { x: 'data', y: 'data' };
@@ -2256,10 +2259,29 @@ export class Axes {
     if (axis === 'both' || axis === 'y') apply('y');
     return this;
   }
-  /** set_xlabel(s) — x axis label; '\n' starts a new line. */
-  set_xlabel(s: unknown): this { arity('set_xlabel', arguments.length, 1, false); this.xlabel = str(s); return this; }
-  /** set_ylabel(s) — y axis label, rotated 90°; '\n' starts a new line. */
-  set_ylabel(s: unknown): this { arity('set_ylabel', arguments.length, 1, false); this.ylabel = str(s); return this; }
+  /**
+   * set_xlabel(label, fontdict?, labelpad?, { fontdict, labelpad, loc, color|c, fontsize|size, fontweight|weight }) — the x axis label;
+   * '\n' starts a new line. As in matplotlib the label is one Text, so its properties and labelpad stay for later calls, while
+   * loc ('left' | 'center' | 'right', the label's x and ha) is set on every call. fontdict merges under the keywords.
+   */
+  set_xlabel(s: unknown, ...rest: readonly unknown[]): this { this.xlabel = str(s); this.setLabelStyle('x', rest, 'set_xlabel'); return this; }
+  /** set_ylabel(label, fontdict?, labelpad?, { …set_xlabel's, loc: 'bottom' | 'center' | 'top' }) — the y axis label, rotated 90°. */
+  set_ylabel(s: unknown, ...rest: readonly unknown[]): this { this.ylabel = str(s); this.setLabelStyle('y', rest, 'set_ylabel'); return this; }
+  private labelStyle: { x: AxisLabelStyle; y: AxisLabelStyle } = { x: NO_LABEL_STYLE, y: NO_LABEL_STYLE };
+  /** Axis.set_label_text: update the label Text with fontdict then the keywords; labelpad sets Axis.labelpad. */
+  private setLabelStyle(a: 'x' | 'y', rest: readonly unknown[], fn: string): void {
+    const kw = new KwReader(withFontdict(fn, bindPositional(fn, ['fontdict', 'labelpad'], rest)), fn);
+    const padPt = kw.read(['labelpad'], optionOf(num('labelpad')), (): Option<number> => none);
+    const locs = a === 'x' ? ['left', 'center', 'right'] as const : ['bottom', 'center', 'top'] as const;
+    const loc = kw.read(['loc'], (v): Result<AxisLabelStyle['loc']> => (v === locs[0] ? ok('start') : v === 'center' ? ok('center') : v === locs[2] ? ok('end')
+      : err(`${typeof v === 'string' ? `'${v}'` : JSON.stringify(v)} is not a valid value for loc. Supported values are '${locs.join("', '")}'`)), (): AxisLabelStyle['loc'] => 'center');
+    const sizePt = kw.read(['fontsize', 'size'], optionOf((v) => parseFontSize(v, this.theme.font.sizePt)), (): Option<number> => none);
+    const weight = kw.read(['fontweight', 'weight'], optionOf(weightOf), (): Option<number> => none);
+    const color = kw.read(['color', 'c'], optionOf((v) => parseRgb(v, this.theme.axes.cycle)), (): Option<Rgb> => none);
+    kw.done();
+    const old = this.labelStyle[a];
+    this.labelStyle = { ...this.labelStyle, [a]: { sizePt: keepSet(sizePt, old.sizePt), color: keepSet(color, old.color), weight: keepSet(weight, old.weight), padPt: keepSet(padPt, old.padPt), loc } };
+  }
   /** set_xlim(lo, hi) or set_xlim([lo, hi]); lo > hi inverts the axis. */
   set_xlim(...args: readonly unknown[]): this { this.xaxis.setLimits(args, 'set_xlim'); return this; }
   /** set_ylim(lo, hi) or set_ylim([lo, hi]); lo > hi inverts the axis (top-down Gantt rows). */
@@ -2472,6 +2494,7 @@ export class Axes {
       xShare: this.fig.axes.findIndex((o) => o.xaxis === this.xaxis),
       yShare: this.fig.axes.findIndex((o) => o.yaxis === this.yaxis),
       hiddenLabels: this.hiddenLabels,
+      labelStyle: this.labelStyle,
       frameOn: this.frameOn,
       axisOn: this.axisOn,
     };
