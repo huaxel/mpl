@@ -1,0 +1,64 @@
+name: oracle
+# Regenerate matplotlib oracle files on linux/amd64 (the environment docs/fixtures.md requires), without Docker on a laptop.
+# Dispatch on a branch: gh workflow run oracle.yml --ref <branch> -f cmd='python fixtures/generate_additions.py'
+# The run uploads every file the command created or changed as the `oracle-out` artifact; nothing is pushed.
+on:
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: shell command to run from the repo root (e.g. python fixtures/generate_additions.py)
+        required: true
+        default: python fixtures/generate_additions.py
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    steps:
+      - uses: actions/checkout@v7
+      - name: Python deps (fixtures/requirements.txt)
+        run: pip install -q -r fixtures/requirements.txt
+      - name: Inter v4.0 static OTFs (the build src/fonts/inter-*.ts was baked from)
+        run: |
+          python - <<'EOF'
+          import hashlib, io, os, urllib.request, zipfile
+          want = {
+              "Inter-Regular.otf": "be6d709dcb730ddaf050cbdae6fe89bd56d5d14dc66885639bbf6f06bd03521b",
+              "Inter-Medium.otf": "1e65171fccd6f445b7742728454620ec2867356c849af78e71bf2c4f0e3d97ba",
+              "Inter-SemiBold.otf": "bd68706b7bf8b3c580ae57685a2116bb1704b3a9998309ccfec7cd486f8a593e",
+              "Inter-Bold.otf": "00fd6f4691ee8884a33b46bf45851b341927c37c30064f558e1befb242971c49",
+          }
+          z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen("https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip").read()))
+          d = "/usr/share/fonts/opentype/inter"
+          os.makedirs(d, exist_ok=True)
+          for name, sha in want.items():
+              b = z.read(f"extras/otf/{name}")
+              got = hashlib.sha256(b).hexdigest()
+              if got != sha:
+                  raise SystemExit(f"{name}: sha256 {got} != {sha}")
+              open(os.path.join(d, name), "wb").write(b)
+          EOF
+      - name: Environment
+        run: |
+          uname -m
+          python -c "import matplotlib, matplotlib.ft2font as ft, numpy; print(matplotlib.__version__, ft.__freetype_version__, numpy.__version__)"
+      - name: Snapshot
+        run: find . -path ./.git -prune -o -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/before.sha
+      - name: Run
+        env:
+          CMD: ${{ inputs.cmd }}
+        run: sh -c "$CMD"
+      - name: Collect new and changed files
+        run: |
+          find . -path ./.git -prune -o -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/after.sha
+          grep -vxF -f /tmp/before.sha /tmp/after.sha | awk '{print $2}' | grep -v '__pycache__' > /tmp/changed.txt || true
+          cat /tmp/changed.txt
+          mkdir -p /tmp/out
+          cp /tmp/before.sha /tmp/out/before.sha
+          tar -cf /tmp/out/changed.tar -T /tmp/changed.txt
+          cp /tmp/changed.txt /tmp/out/changed.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oracle-out
+          path: /tmp/out
