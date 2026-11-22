@@ -2,7 +2,10 @@
 // with a TypeError (fixtures/generate_api_errors_oracle.py); mpl must reject each of them with a TypeError too. The calls
 // matplotlib accepts and mpl runs are pinned pixel-exact by fixtures/ref (bar_positional_*, fill_between_y2_keyword).
 import { readFileSync } from 'node:fs';
-import { subplots, type Axes } from '../src/index.ts';
+import { registerColormaps, subplots, type Axes } from '../src/index.ts';
+import { allColormaps } from '../src/colormaps/all.ts';
+
+registerColormaps(...allColormaps);   // the oracle calls name colormaps (imshow(Z, 'magma'))
 
 type Case = { readonly call: readonly [string, readonly unknown[], Readonly<Record<string, unknown>>]; readonly raises: string | null; readonly note: string };
 const ORACLE: { readonly cases: readonly Case[] } = JSON.parse(readFileSync(new URL('../fixtures/api_errors_oracle.json', import.meta.url), 'utf8'));
@@ -81,13 +84,10 @@ const svg = (f: (ax: Axes) => void): string => { const [fig, ax] = subplots(); a
 
 // JS has no positional/keyword split, so the keyword object's slot must hold a plain object: anything else there is an
 // argument mpl does not take positionally, and reading names off it would ignore it (the #86 failure)
+// (scatter(x, y, 10), hist(x, 20), axhline(0.5, 0.2) and the other optional positionals matplotlib takes are bound by name
+// since #97: fixtures/api_errors_oracle.json and the positional_* fixtures pin them)
 const notKw: readonly [string, () => unknown][] = [
-  ['scatter(x, y, 10)', () => subplots()[1].scatter([1], [2], 10 as never)],
-  ['hist(x, 20)', () => subplots()[1].hist([1, 2, 3], 20 as never)],
-  ['axhline(0.5, 0.2)', () => subplots()[1].axhline(0.5, 0.2 as never)],
-  ['text(0, 0, "s", "red")', () => subplots()[1].text(0, 0, 's', 'red' as never)],
   ['legend(["a"])', () => subplots()[1].legend(['a'] as never)],
-  ['imshow(Z, "gray")', () => subplots()[1].imshow([[1, 2]], 'gray' as never)],
   ['toSVG(2)', () => subplots()[0].toSVG(2 as never)],
 ];
 for (const [what, f] of notKw) {

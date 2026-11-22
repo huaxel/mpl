@@ -123,9 +123,18 @@ function arity(fn: string, given: number, positional: number, kwargs: boolean): 
  * the keywords under their names. A name given both ways, too many positionals, or a non-object in the keyword slot is a
  * TypeError, as in Python. null/undefined positionals mean "not given", as None does.
  */
-function bindPositional(fn: string, names: readonly string[], rest: readonly unknown[]): Kwargs {
+/** Text.update(fontdict), then the keywords: a fontdict (positional or keyword) merges under the keyword object, which wins. */
+function withFontdict(fn: string, kw: Kwargs): Kwargs {
+  const fd = prop(kw, 'fontdict');
+  if (fd.kind === 'none' || isNullish(fd.value)) return Object.fromEntries(Object.entries(kw).filter(([k]) => k !== 'fontdict'));
+  if (!isPlainObject(fd.value)) throw new TypeError(`${fn}(): fontdict must be an object of text properties, got ${describeArg(fd.value)}`);
+  return { ...fd.value, ...Object.fromEntries(Object.entries(kw).filter(([k]) => k !== 'fontdict')) };
+}
+function bindPositional(fn: string, names: readonly string[], rest: readonly unknown[], objectSlot: string = ''): Kwargs {
   const last = rest.length > 0 ? rest[rest.length - 1] : 0;
-  const hasKw = rest.length > 0 && isPlainObject(last);
+  // a trailing object is the keyword object, unless it lands on objectSlot (annotate's arrowprops), a positional that is itself an
+  // object: Python binds annotate(text, xy, xytext, xycoords, textcoords, {…}) to arrowprops, so mpl does too
+  const hasKw = rest.length > 0 && isPlainObject(last) && !(objectSlot !== '' && names[rest.length - 1] === objectSlot);
   const kw: Kwargs = hasKw && isPlainObject(last) ? last : {};
   const pos = hasKw ? rest.slice(0, -1) : rest;
   if (pos.length > names.length) {
@@ -913,16 +922,16 @@ export class Axes {
   }
 
   /** axhline(y = 0, { xmin = 0, xmax = 1, …Line2D }) — xmin/xmax are axes fractions. Autoscales y only when y is outside the current bounds. */
-  axhline(y: unknown = 0, kwargs: Kwargs = {}): LineArtist {
-    arity('axhline', arguments.length, 1, true);
-    const kw = this.refLineKw('axhline', isPlainObject(y) ? y : kwargs);
-    return this.refLine(kw, 'axhline', isPlainObject(y) ? 0 : y, kw.read(['xmin'], num('xmin'), () => 0), kw.read(['xmax'], num('xmax'), () => 1));
+  axhline(...args: readonly unknown[]): LineArtist {
+    const kw = this.refLineKw('axhline', bindPositional('axhline', ['y', 'xmin', 'xmax'], args));
+    const y = kw.read(['y'], (v): Result<unknown> => ok(v), (): unknown => 0);
+    return this.refLine(kw, 'axhline', y, kw.read(['xmin'], num('xmin'), () => 0), kw.read(['xmax'], num('xmax'), () => 1));
   }
   /** axvline(x = 0, { ymin = 0, ymax = 1, …Line2D }) — ymin/ymax are axes fractions. Autoscales x only when x is outside the current bounds. */
-  axvline(x: unknown = 0, kwargs: Kwargs = {}): LineArtist {
-    arity('axvline', arguments.length, 1, true);
-    const kw = this.refLineKw('axvline', isPlainObject(x) ? x : kwargs);
-    return this.refLine(kw, 'axvline', isPlainObject(x) ? 0 : x, kw.read(['ymin'], num('ymin'), () => 0), kw.read(['ymax'], num('ymax'), () => 1));
+  axvline(...args: readonly unknown[]): LineArtist {
+    const kw = this.refLineKw('axvline', bindPositional('axvline', ['x', 'ymin', 'ymax'], args));
+    const x = kw.read(['x'], (v): Result<unknown> => ok(v), (): unknown => 0);
+    return this.refLine(kw, 'axvline', x, kw.read(['ymin'], num('ymin'), () => 0), kw.read(['ymax'], num('ymax'), () => 1));
   }
 
   private refLineKw(fn: 'axhline' | 'axvline', kwargs: Kwargs): KwReader {
@@ -972,9 +981,9 @@ export class Axes {
   }
 
   /** hlines(y, xmin, xmax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of horizontal segments. */
-  hlines(y: unknown, xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SegmentsArtist { arity('hlines', arguments.length, 3, true); return this.lines('hlines', y, xmin, xmax, kwargs); }
+  hlines(y: unknown, xmin: unknown, xmax: unknown, ...rest: readonly unknown[]): SegmentsArtist { return this.lines('hlines', y, xmin, xmax, bindPositional('hlines', ['colors', 'linestyles'], rest)); }
   /** vlines(x, ymin, ymax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of vertical segments. */
-  vlines(x: unknown, ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SegmentsArtist { arity('vlines', arguments.length, 3, true); return this.lines('vlines', x, ymin, ymax, kwargs); }
+  vlines(x: unknown, ymin: unknown, ymax: unknown, ...rest: readonly unknown[]): SegmentsArtist { return this.lines('vlines', x, ymin, ymax, bindPositional('vlines', ['colors', 'linestyles'], rest)); }
 
   private lines(fn: 'hlines' | 'vlines', posRaw: unknown, loRaw: unknown, hiRaw: unknown, kwargs: Kwargs): SegmentsArtist {
     const kw = new KwReader(kwargs, fn);
@@ -1022,9 +1031,8 @@ export class Axes {
    * errorbar(x, y, { yerr, xerr, fmt, ecolor, elinewidth, elinestyle, capsize, capthick, barsabove, lolims, uplims,
    * xlolims, xuplims, errorevery, label, …Line2D }) — errors are a scalar, one value per point, or [lower, upper].
    */
-  errorbar(xRaw: unknown, yRaw: unknown, kwargs: Kwargs = {}): ErrorbarContainer {
-    arity('errorbar', arguments.length, 2, true);
-    const kw = new KwReader(kwargs, 'errorbar');
+  errorbar(xRaw: unknown, yRaw: unknown, ...rest: readonly unknown[]): ErrorbarContainer {
+    const kw = new KwReader(bindPositional('errorbar', ['yerr', 'xerr', 'fmt'], rest), 'errorbar');
     const xs = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const ys = this.yaxis.convert(unwrap(parseSeries(yRaw, 'y')));
     if (xs.length !== ys.length) throw new RangeError("'x' and 'y' must have the same size");
@@ -1045,7 +1053,7 @@ export class Axes {
     const xlolims = kw.read(['xlolims'], (v) => boolMask(v, n, 'xlolims'), noLims), xuplims = kw.read(['xuplims'], (v) => boolMask(v, n, 'xuplims'), noLims);
     const every = kw.read(['errorevery'], (v) => everyMask(v, n), () => unwrap(everyMask(1, n)));
     const lbl = kw.read(['label'], label, (): Label => ({ kind: 'none' }));
-    const kwColor = prop(kwargs, 'color').kind === 'some' || prop(kwargs, 'c').kind === 'some';
+    const kwColor = prop(kw.kw, 'color').kind === 'some' || prop(kw.kw, 'c').kind === 'some';
     // fmt='none' parses to colour 'none', so the line prop cycle does not advance
     const lp = this.lineProps(kw, fmt, (): Paint => (fmtNone ? { kind: 'solid', color: this.theme.axes.cycle[0] } : { kind: 'solid', color: this.next('line') }));
     kw.done();
@@ -1130,15 +1138,11 @@ export class Axes {
    * label, stacked, facecolor|fc, edgecolor|ec, linewidth|lw, alpha, clip_on }) — one dataset or a list of them.
    * Returns [n, bins, patches] as matplotlib does: per-dataset arrays when x is a list of datasets.
    */
-  hist(x: number | readonly number[] | Float64Array | NumericTypedArray | readonly Date[] | readonly string[]): HistResult;
-  hist(x: number | readonly number[] | Float64Array | NumericTypedArray | readonly Date[] | readonly string[], kwargs: Kwargs): HistResult;
-  hist(x: readonly (readonly number[] | Float64Array | NumericTypedArray)[]): HistResultMulti;
-  hist(x: readonly (readonly number[] | Float64Array | NumericTypedArray)[], kwargs: Kwargs): HistResultMulti;
-  hist(x: unknown): HistResult | HistResultMulti;
-  hist(x: unknown, kwargs: Kwargs): HistResult | HistResultMulti;
-  hist(xRaw: unknown, kwargs: Kwargs = {}): HistResult | HistResultMulti {
-    arity('hist', arguments.length, 1, true);
-    const kw = new KwReader(kwargs, 'hist');
+  hist(x: number | readonly number[] | Float64Array | NumericTypedArray | readonly Date[] | readonly string[], ...binsAndKwargs: readonly unknown[]): HistResult;
+  hist(x: readonly (readonly number[] | Float64Array | NumericTypedArray)[], ...binsAndKwargs: readonly unknown[]): HistResultMulti;
+  hist(x: unknown, ...binsAndKwargs: readonly unknown[]): HistResult | HistResultMulti;
+  hist(xRaw: unknown, ...binsAndKwargs: readonly unknown[]): HistResult | HistResultMulti {
+    const kw = new KwReader(bindPositional('hist', ['bins'], binsAndKwargs), 'hist');
     const histtype = kw.read(['histtype'], oneOf('histtype', ['bar', 'barstacked', 'step', 'stepfilled']), (): HistType => 'bar');
     const align = kw.read(['align'], oneOf('align', ['left', 'mid', 'right']), (): 'left' | 'mid' | 'right' => 'mid');
     const orientation = kw.read(['orientation'], oneOf('orientation', ['horizontal', 'vertical']), (): Orientation => 'vertical');
@@ -1821,9 +1825,8 @@ export class Axes {
   get transAxes(): TransformRef { return { kind: 'transform', coords: 'axes' }; }
 
   /** text(x, y, s, { transform, color, fontsize, ha, va }) — data coordinates unless transform: ax.transAxes. */
-  text(xRaw: unknown, yRaw: unknown, s: unknown, kwargs: Kwargs = {}): TextArtist {
-    arity('text', arguments.length, 3, true);
-    const kw = new KwReader(kwargs, 'text');
+  text(xRaw: unknown, yRaw: unknown, s: unknown, ...rest: readonly unknown[]): TextArtist {
+    const kw = new KwReader(withFontdict('text', bindPositional('text', ['fontdict'], rest)), 'text');
     const coords = kw.read(['transform'], (v): Result<TextCoords> => (isPlainObject(v) && prop(v, 'kind').kind === 'some' && (prop(v, 'coords').kind === 'some')
       ? parseCoords(prop(v, 'coords')) : err('transform must be ax.transData or ax.transAxes')), (): TextCoords => 'data');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
@@ -1895,9 +1898,9 @@ export class Axes {
   }
 
   /** annotate(text, xy, { xytext, xycoords, textcoords, arrowprops, ha, va, color, fontsize, fontweight, clip_on }) — coords are 'data' or '<figure|axes> <fraction|points|pixels|fontsize>', and textcoords may also be 'offset <points|pixels|fontsize>' from xy; either may be an [x, y] pair of systems, one per axis. In 'data' coordinates a value may be a Date or a category name. arrowprops without 'arrowstyle' take width, headwidth, headlength, shrink; with one ('-', '->', '-|>', '<-', '<->', '<|-', '<|-|>', ']-', '-[', ']-[', '|-|', ']->', '<-[', 'simple', 'fancy', 'wedge', each optionally ',key=value,...') they take connectionstyle ('arc3[,rad=r]'), relpos, shrinkA, shrinkB, mutation_scale and alpha; both take color, facecolor/fc, edgecolor/ec, linewidth/lw. */
-  annotate(text: unknown, xy: unknown, kwargs: Kwargs = {}): AnnotationArtist {
-    arity('annotate', arguments.length, 2, true);
-    const kw = new KwReader(kwargs, 'annotate');
+  annotate(text: unknown, xy: unknown, ...rest: readonly unknown[]): AnnotationArtist {
+    // annotate(text, xy, xytext, xycoords, textcoords, arrowprops, annotation_clip): an object in the arrowprops slot is arrowprops
+    const kw = new KwReader(bindPositional('annotate', ['xytext', 'xycoords', 'textcoords', 'arrowprops', 'annotation_clip'], rest, 'arrowprops'), 'annotate');
     const xytextV = kw.get(['xytext']);
     const xycoords = kw.read(['xycoords'], (v) => parseAnnotationCoords(v, 'xycoords'), (): AnnotationCoordPair => ({ x: { kind: 'data' }, y: { kind: 'data' }, pair: false }));
     const textcoords = kw.read(['textcoords'], (v) => parseAnnotationCoords(v, 'textcoords'), () => xycoords);
@@ -1935,9 +1938,8 @@ export class Axes {
    * — display a 2-D array as an image. Default interpolation is 'auto' (nearest when
    * zoomed in, hanning when downsampling). Sets aspect to 'equal' unless overridden.
    */
-  imshow(Z: unknown, kwargs: Kwargs = {}): ImageArtist {
-    arity('imshow', arguments.length, 1, true);
-    const kw = new KwReader(kwargs, 'imshow');
+  imshow(Z: unknown, ...rest: readonly unknown[]): ImageArtist {
+    const kw = new KwReader(bindPositional('imshow', ['cmap', 'norm'], rest), 'imshow');
     const { values, rows, cols, channels } = parseImageGrid(Z);
     const cmap = kw.read(['cmap'], parseColormap, () => unwrap(parseColormap('viridis')));
     const vminO = kw.read(['vmin'], (v): Result<Option<number>> => (typeof v === 'number' && Number.isFinite(v) ? ok(some(v)) : err('vmin must be a number')), (): Option<number> => none);
@@ -1991,9 +1993,8 @@ export class Axes {
    * scatter(x, y, { s, c, marker, cmap, norm, vmin, vmax, alpha, edgecolors, linewidths, zorder, clip_on })
    * — PathCollection. A numeric `c` array with `cmap` (default viridis) maps through Normalize(vmin, vmax).
    */
-  scatter(xRaw: unknown, yRaw: unknown, kwargs: Kwargs = {}): ScatterArtist {
-    arity('scatter', arguments.length, 2, true);
-    const kw = new KwReader(kwargs, 'scatter');
+  scatter(xRaw: unknown, yRaw: unknown, ...rest: readonly unknown[]): ScatterArtist {
+    const kw = new KwReader(bindPositional('scatter', ['s', 'c'], rest), 'scatter');
     const xs = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
     const ys = this.yaxis.convert(unwrap(parseSeries(yRaw, 'y')));
     if (xs.length !== ys.length) throw new RangeError(`scatter: x and y must have the same length, got ${xs.length} and ${ys.length}`);
@@ -2071,9 +2072,8 @@ export class Axes {
   /** axvspan(xmin, xmax, { ymin, ymax, color, facecolor|fc, edgecolor|ec, linewidth|lw, linestyle|ls, alpha, label, clip_on, zorder }) — a
    *  Rectangle from data x xmin to xmax over axes-fraction y ymin to ymax. linestyle dashes the edge (scaled by linewidth, as
    *  Patch's are; 'None' draws no edge); zorder defaults to 1, as patches'. A labelled span is a legend child, as in matplotlib. */
-  axvspan(xmin: unknown, xmax: unknown, kwargs: Kwargs = {}): SpanArtist {
-    arity('axvspan', arguments.length, 2, true);
-    const kw = new KwReader(kwargs, 'axvspan');
+  axvspan(xmin: unknown, xmax: unknown, ...rest: readonly unknown[]): SpanArtist {
+    const kw = new KwReader(bindPositional('axvspan', ['ymin', 'ymax'], rest), 'axvspan');
     const x0 = unwrap(parseSeries([xmin], 'xmin')); const x1 = unwrap(parseSeries([xmax], 'xmax'));
     const ymin = kw.read(['ymin'], num('ymin'), () => 0); const ymax = kw.read(['ymax'], num('ymax'), () => 1);
     // Patch semantics: 'color' sets both face and edge colour.
@@ -2096,9 +2096,8 @@ export class Axes {
     this.artists.push(sp); this.xaxis.request(); return sp;
   }
   /** axhspan(ymin, ymax, { xmin, xmax, …axvspan's }) — axvspan across: data y ymin to ymax over axes-fraction x xmin to xmax. */
-  axhspan(ymin: unknown, ymax: unknown, kwargs: Kwargs = {}): SpanArtist {
-    arity('axhspan', arguments.length, 2, true);
-    const kw = new KwReader(kwargs, 'axhspan');
+  axhspan(ymin: unknown, ymax: unknown, ...rest: readonly unknown[]): SpanArtist {
+    const kw = new KwReader(bindPositional('axhspan', ['xmin', 'xmax'], rest), 'axhspan');
     const y0 = unwrap(parseSeries([ymin], 'ymin')); const y1 = unwrap(parseSeries([ymax], 'ymax'));
     const xmin = kw.read(['xmin'], num('xmin'), () => 0); const xmax = kw.read(['xmax'], num('xmax'), () => 1);
     const both = kw.read(['color'], (v) => this.paint(v).ok ? ok(some(unwrap(this.paint(v)))) : err('bad color'), (): Option<Paint> => none);
@@ -2173,9 +2172,9 @@ export class Axes {
    * colour to axes.titlecolor unless 'auto'), applies `fontdict`, then the keywords; `pad` (points, default
    * axes.titlepad) moves every title; `y` is the baseline in axes fractions (default 1, the top).
    */
-  set_title(s: unknown, kwargs: Kwargs = {}): this {
-    arity('set_title', arguments.length, 1, true);
-    const kw = new KwReader(kwargs, 'set_title');
+  set_title(s: unknown, ...rest: readonly unknown[]): this {
+    // set_title(label, fontdict, loc, pad): a lone trailing object is the keyword object; a fontdict positional needs one after it
+    const kw = new KwReader(bindPositional('set_title', ['fontdict', 'loc', 'pad'], rest), 'set_title');
     const loc = kw.read(['loc'], parseHAlign, () => this.theme.axes.titleLoc);
     const padPt = kw.read(['pad'], num('pad'), () => this.theme.axes.titlePadPt);
     const y = kw.read(['y'], num('y'), () => 1);
@@ -2394,16 +2393,15 @@ export class Axes {
       set: (kwargs: Kwargs) => { const kw = new KwReader(kwargs, 'Text.set'); const st = this.readTextStyle(kw); kw.done(); this.styleTickLabel(a, j, st); },
     }));
   }
-  /** grid(visible?, { which, axis, color|c, linewidth|lw, linestyle|ls, alpha }) — Axes.grid.
-   *  As in matplotlib: line kwargs imply visible=True, visible=null toggles, and the line properties
+  /** grid(visible?, which?, axis?, { visible, which, axis, color|c, linewidth|lw, linestyle|ls, alpha }) — Axes.grid, positionals
+   *  in matplotlib's order. As in matplotlib: line kwargs imply visible=True, visible=null toggles, and the line properties
    *  stick to the chosen axes and tick families (major, minor) for later grid() calls. A kwargs object
-   *  alone, grid({ ... }), is grid(null, { ... }). */
-  grid(visible: unknown = true, kwargs: Kwargs = {}): this {
-    arity('grid', arguments.length, 1, true);
-    // visible: a bool sets it; null/undefined (or a lone kwargs object) is matplotlib's None
-    const bare = isPlainObject(visible);
-    const kw = new KwReader(bare ? visible : kwargs, 'grid');
-    const asked: Option<boolean> = bare || isNullish(visible) ? none : some(unwrap(bool('grid visible')(visible)));
+   *  alone, grid({ ... }), is grid(null, { ... }); grid() with no arguments turns the grid on. */
+  grid(...args: readonly unknown[]): this {
+    const kw = new KwReader(bindPositional('grid', ['visible', 'which', 'axis'], args), 'grid');
+    // visible: a bool sets it; null (or a lone kwargs object) is matplotlib's None
+    const visibleKw = kw.get(['visible']);
+    const asked: Option<boolean> = args.length === 0 ? some(true) : visibleKw.kind === 'none' ? none : some(unwrap(bool('grid visible')(visibleKw.value)));
     const axis = kw.read(['axis'], (v): Result<GridWhich> => (v === 'both' || v === 'x' || v === 'y' ? ok(v) : err(`grid axis must be 'both', 'x' or 'y'`)), (): GridWhich => 'both');
     const which = kw.read(['which'], (v): Result<'major' | 'minor' | 'both'> => (v === 'major' || v === 'minor' || v === 'both' ? ok(v) : err(`grid which must be 'major', 'minor' or 'both'`)), () => 'major' as const);
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle).ok ? ok(some(unwrap(parseRgb(v, this.theme.axes.cycle)))) : err(`grid color: ${JSON.stringify(v)} is not a color`), (): Option<Rgb> => none);
@@ -3038,17 +3036,18 @@ export class Figure {
   // one cached layout per device: PNG (Agg) and SVG geometry differ (frame.ts Device)
   private _layoutCache: Record<Device, Option<LayoutCacheEntry>> = { agg: none, svg: none };
   private touch(): void { this._layoutCache = { agg: none, svg: none }; }
-  /** Figure-level text in figure coordinates (0..1). */
-  text(x: unknown, y: unknown, s: unknown, kwargs: Kwargs = {}): this {
-    arity('Figure.text', arguments.length, 3, true);
-    const kw = new KwReader(kwargs, 'Figure.text');
+  /** Figure.text(x, y, s, fontdict?, { fontdict, color|c, fontsize|size, fontweight|weight, ha, va }) — figure coordinates (0..1);
+   *  fontdict (positional or keyword) merges under the keywords, as in matplotlib. */
+  text(x: unknown, y: unknown, s: unknown, ...rest: readonly unknown[]): this {
+    const kw = new KwReader(withFontdict('Figure.text', bindPositional('Figure.text', ['fontdict'], rest)), 'Figure.text');
     const color = kw.read(['color', 'c'], (v) => parseRgb(v, this.theme.axes.cycle), () => this.theme.text.color);
     const sizePt = kw.read(['fontsize', 'size'], (v) => parseFontSize(v, this.theme.font.sizePt), () => this.theme.font.sizePt);
     const ha = kw.read(['ha', 'horizontalalignment'], parseHAlign, () => unwrap(parseHAlign('left')));
     const va = kw.read(['va', 'verticalalignment'], parseVAlign, () => unwrap(parseVAlign('baseline')));
+    const weight = kw.read(['fontweight', 'weight'], weightOf, () => this.theme.font.weight);
     kw.done();
     const fx = unwrap(num('x')(x)), fy = unwrap(num('y')(y));
-    this._figText = [...this._figText, { x: fx, y: fy, text: str(s), ha, va, sizePt, weight: this.theme.font.weight, color }];
+    this._figText = [...this._figText, { x: fx, y: fy, text: str(s), ha, va, sizePt, weight, color }];
     this.touch(); return this;
   }
   /** suptitle(s, { color|c, fontsize|size, fontweight|weight }) — centred figure title (figure.titlesize/titleweight). */
@@ -3091,9 +3090,8 @@ export class Figure {
    * subplots_adjust({ left, bottom, right, top, wspace, hspace }) — SubplotParams.update: unset values are
    * kept; every Axes moves to its SubplotSpec's new position (a gridspec_kw value still wins for its grid).
    */
-  subplots_adjust(kwargs: Kwargs = {}): this {
-    arity('Figure.subplots_adjust', arguments.length, 0, true);
-    const kw = new KwReader(kwargs, 'Figure.subplots_adjust');
+  subplots_adjust(...args: readonly unknown[]): this {
+    const kw = new KwReader(bindPositional('Figure.subplots_adjust', ['left', 'bottom', 'right', 'top', 'wspace', 'hspace'], args), 'Figure.subplots_adjust');
     const p = this.subplotpars;
     const next: SubplotParams = {
       left: kw.read(['left'], num('left'), () => p.left), bottom: kw.read(['bottom'], num('bottom'), () => p.bottom),
@@ -3115,9 +3113,8 @@ export class Figure {
    * xlabel); when every Axes is a subplot, also subplots_adjust(bottom). Minor labels (which='minor'|'both')
    * are not yet supported and throw.
    */
-  autofmt_xdate(kwargs: Kwargs = {}): this {
-    arity('Figure.autofmt_xdate', arguments.length, 0, true);
-    const kw = new KwReader(kwargs, 'Figure.autofmt_xdate');
+  autofmt_xdate(...args: readonly unknown[]): this {
+    const kw = new KwReader(bindPositional('Figure.autofmt_xdate', ['bottom', 'rotation', 'ha', 'which'], args), 'Figure.autofmt_xdate');
     const bottom = kw.read(['bottom'], num('bottom'), () => 0.2);
     const rotation = kw.read(['rotation'], (v) => (typeof v === 'number' && Number.isFinite(v) ? ok(v) : err('rotation must be a finite number')), () => 30);
     const ha = kw.read(['ha'], (v) => (v === 'left' || v === 'center' || v === 'right' ? ok(v) : err(`ha must be 'left', 'center' or 'right'`)), (): HAlign => 'right');

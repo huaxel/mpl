@@ -94,11 +94,11 @@ Figure.subplots / GridSpec.subplots: an nrows x ncols grid of Axes, row-major. s
 
 Keyword arguments (unknown keys throw): `sharex`, `sharey`, `gridspec_kw`
 
-### `Figure.text(x, y, s, kwargs?)`
+### `Figure.text(x, y, s, ...rest)`
 
-Figure-level text in figure coordinates (0..1).
+Figure.text(x, y, s, fontdict?, { fontdict, color|c, fontsize|size, fontweight|weight, ha, va }) — figure coordinates (0..1); fontdict (positional or keyword) merges under the keywords, as in matplotlib.
 
-Keyword arguments (unknown keys throw): `color | c`, `fontsize | size`, `ha | horizontalalignment`, `va | verticalalignment`
+Keyword arguments (unknown keys throw): `color | c`, `fontsize | size`, `ha | horizontalalignment`, `va | verticalalignment`, `fontweight | weight`
 
 ### `Figure.suptitle(s, kwargs?)`
 
@@ -118,13 +118,13 @@ supylabel(s, { color|c, fontsize|size, fontweight|weight }) — figure-level y l
 
 Keyword arguments (unknown keys throw): `color | c`, `fontsize | size`, `fontweight | weight`
 
-### `Figure.subplots_adjust(kwargs?)`
+### `Figure.subplots_adjust(...args)`
 
 subplots_adjust({ left, bottom, right, top, wspace, hspace }) — SubplotParams.update: unset values are kept; every Axes moves to its SubplotSpec's new position (a gridspec_kw value still wins for its grid).
 
 Keyword arguments (unknown keys throw): `left`, `bottom`, `right`, `top`, `wspace`, `hspace`
 
-### `Figure.autofmt_xdate(kwargs?)`
+### `Figure.autofmt_xdate(...args)`
 
 Figure.autofmt_xdate(bottom=0.2, rotation=30, ha='right', which='major') — rotate and align x tick labels; on a shared-x grid, only the bottom row keeps visible labels (others hide labels and clear xlabel); when every Axes is a subplot, also subplots_adjust(bottom). Minor labels (which='minor'|'both') are not yet supported and throw.
 
@@ -242,17 +242,17 @@ step(x, y, [fmt], { where: 'pre' | 'post' | 'mid', … }) — plot() with drawst
 
 Keyword arguments (unknown keys throw): `decimate`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
 
-### `Axes.axhline(y?, kwargs?)`
+### `Axes.axhline(...args)`
 
 axhline(y = 0, { xmin = 0, xmax = 1, …Line2D }) — xmin/xmax are axes fractions. Autoscales y only when y is outside the current bounds.
 
-Keyword arguments (unknown keys throw): `xmin`, `xmax`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `y`, `xmin`, `xmax`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
 
-### `Axes.axvline(x?, kwargs?)`
+### `Axes.axvline(...args)`
 
 axvline(x = 0, { ymin = 0, ymax = 1, …Line2D }) — ymin/ymax are axes fractions. Autoscales x only when x is outside the current bounds.
 
-Keyword arguments (unknown keys throw): `ymin`, `ymax`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `x`, `ymin`, `ymax`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
 
 ### `Axes.axline(xy1, xy2OrKw?, kwargs?)`
 
@@ -260,25 +260,25 @@ axline(xy1, xy2) or axline(xy1, { slope }) — an infinite line through two poin
 
 Keyword arguments (unknown keys throw): `slope`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `label`, `clip_on | clipon | clip`
 
-### `Axes.hlines(y, xmin, xmax, kwargs?)`
+### `Axes.hlines(y, xmin, xmax, ...rest)`
 
 hlines(y, xmin, xmax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of horizontal segments.
 
 Keyword arguments (unknown keys throw): `colors | color | c`, `linestyles | linestyle | ls`, `linewidths | linewidth | lw`, `alpha`, `zorder`, `label`, `clip_on | clipon | clip`
 
-### `Axes.vlines(x, ymin, ymax, kwargs?)`
+### `Axes.vlines(x, ymin, ymax, ...rest)`
 
 vlines(x, ymin, ymax, { colors, linestyles, label, linewidth|lw, alpha, zorder, clip_on }) — a LineCollection of vertical segments.
 
 Keyword arguments (unknown keys throw): `colors | color | c`, `linestyles | linestyle | ls`, `linewidths | linewidth | lw`, `alpha`, `zorder`, `label`, `clip_on | clipon | clip`
 
-### `Axes.errorbar(xRaw, yRaw, kwargs?)`
+### `Axes.errorbar(xRaw, yRaw, ...rest)`
 
 errorbar(x, y, { yerr, xerr, fmt, ecolor, elinewidth, elinestyle, capsize, capthick, barsabove, lolims, uplims, xlolims, xuplims, errorevery, label, …Line2D }) — errors are a scalar, one value per point, or [lower, upper].
 
 Keyword arguments (unknown keys throw): `yerr`, `xerr`, `fmt`, `ecolor`, `elinewidth`, `elinestyle`, `capsize`, `capthick`, `barsabove`, `lolims`, `uplims`, `xlolims`, `xuplims`, `errorevery`, `label`, `color | c`, `alpha`, `linestyle | ls`, `marker`, `linewidth | lw`, `markersize | ms`, `markeredgewidth | mew`, `markerfacecolor | mfc`, `markeredgecolor | mec`, `drawstyle | ds`, `zorder`, `clip_on | clipon | clip`
 
-### `Axes.hist(xRaw, kwargs?)`
+### `Axes.hist(xRaw, ...binsAndKwargs)`
 
 hist(x, { bins, range, density, weights, cumulative, bottom, histtype, align, orientation, rwidth, log, color, label, stacked, facecolor|fc, edgecolor|ec, linewidth|lw, alpha, clip_on }) — one dataset or a list of them. Returns [n, bins, patches] as matplotlib does: per-dataset arrays when x is a list of datasets.
 
@@ -328,37 +328,37 @@ The transform tokens text() understands, named as in matplotlib.
 
 Axes-fraction coordinates for text(): (0, 0) bottom left, (1, 1) top right.
 
-### `Axes.text(xRaw, yRaw, s, kwargs?)`
+### `Axes.text(xRaw, yRaw, s, ...rest)`
 
 text(x, y, s, { transform, color, fontsize, ha, va }) — data coordinates unless transform: ax.transAxes.
 
 Keyword arguments (unknown keys throw): `transform`, `color | c`, `fontsize | size`, `ha | horizontalalignment`, `va | verticalalignment`, `fontweight | weight`, `clip_on | clipon | clip`
 
-### `Axes.annotate(text, xy, kwargs?)`
+### `Axes.annotate(text, xy, ...rest)`
 
 annotate(text, xy, { xytext, xycoords, textcoords, arrowprops, ha, va, color, fontsize, fontweight, clip_on }) — coords are 'data' or '<figure|axes> <fraction|points|pixels|fontsize>', and textcoords may also be 'offset <points|pixels|fontsize>' from xy; either may be an [x, y] pair of systems, one per axis. In 'data' coordinates a value may be a Date or a category name. arrowprops without 'arrowstyle' take width, headwidth, headlength, shrink; with one ('-', '->', '-|>', '<-', '<->', '<|-', '<|-|>', ']-', '-[', ']-[', '|-|', ']->', '<-[', 'simple', 'fancy', 'wedge', each optionally ',key=value,...') they take connectionstyle ('arc3[,rad=r]'), relpos, shrinkA, shrinkB, mutation_scale and alpha; both take color, facecolor/fc, edgecolor/ec, linewidth/lw.
 
 Keyword arguments (unknown keys throw): `xytext`, `xycoords`, `textcoords`, `arrowprops`, `color | c`, `fontsize | size`, `fontweight | weight`, `ha | horizontalalignment`, `va | verticalalignment`, `clip_on | clipon | clip`
 
-### `Axes.imshow(Z, kwargs?)`
+### `Axes.imshow(Z, ...rest)`
 
 imshow(Z, { cmap, norm, vmin, vmax, origin, extent, interpolation, aspect, alpha }) — display a 2-D array as an image. Default interpolation is 'auto' (nearest when zoomed in, hanning when downsampling). Sets aspect to 'equal' unless overridden.
 
 Keyword arguments (unknown keys throw): `cmap`, `vmin`, `vmax`, `norm`, `origin`, `interpolation`, `extent`, `alpha`, `aspect`, `label`, `clip_on | clipon | clip`, `zorder`
 
-### `Axes.scatter(xRaw, yRaw, kwargs?)`
+### `Axes.scatter(xRaw, yRaw, ...rest)`
 
 scatter(x, y, { s, c, marker, cmap, norm, vmin, vmax, alpha, edgecolors, linewidths, zorder, clip_on }) — PathCollection. A numeric `c` array with `cmap` (default viridis) maps through Normalize(vmin, vmax).
 
 Keyword arguments (unknown keys throw): `s`, `marker`, `alpha`, `c | color`, `cmap`, `vmin`, `vmax`, `norm`, `edgecolors | edgecolor`, `linewidths | linewidth | lw`, `label`, `clip_on | clipon | clip`, `zorder`
 
-### `Axes.axvspan(xmin, xmax, kwargs?)`
+### `Axes.axvspan(xmin, xmax, ...rest)`
 
 axvspan(xmin, xmax, { ymin, ymax, color, facecolor|fc, edgecolor|ec, linewidth|lw, linestyle|ls, alpha, label, clip_on, zorder }) — a Rectangle from data x xmin to xmax over axes-fraction y ymin to ymax. linestyle dashes the edge (scaled by linewidth, as Patch's are; 'None' draws no edge); zorder defaults to 1, as patches'. A labelled span is a legend child, as in matplotlib.
 
 Keyword arguments (unknown keys throw): `ymin`, `ymax`, `color`, `facecolor | fc`, `edgecolor | ec`, `linewidth | lw`, `alpha`, `label`, `clip_on | clipon | clip`, `linestyle | ls`, `zorder`
 
-### `Axes.axhspan(ymin, ymax, kwargs?)`
+### `Axes.axhspan(ymin, ymax, ...rest)`
 
 axhspan(ymin, ymax, { xmin, xmax, …axvspan's }) — axvspan across: data y ymin to ymax over axes-fraction x xmin to xmax.
 
@@ -378,7 +378,7 @@ axis(arg?, { xmin, xmax, ymin, ymax }) — Axes.axis: 'off' / false is set_axis_
 
 Keyword arguments (unknown keys throw): `xmin`, `xmax`, `ymin`, `ymax`
 
-### `Axes.set_title(s, kwargs?)`
+### `Axes.set_title(s, ...rest)`
 
 set_title(label, { loc, pad, y, fontdict, fontsize|size, fontweight|weight, color|c }) — Axes.set_title: each loc ('left' | 'center' | 'right', default axes.titlelocation) is its own title, so a left and a right title can sit beside the centred one. Every call resets that title's size and weight to axes.titlesize/titleweight (and its colour to axes.titlecolor unless 'auto'), applies `fontdict`, then the keywords; `pad` (points, default axes.titlepad) moves every title; `y` is the baseline in axes fractions (default 1, the top).
 
@@ -482,11 +482,11 @@ The major y tick labels as Text handles (see get_xticklabels).
 
 Keyword arguments (unknown keys throw): `color | c`, `fontsize | size`, `fontweight | weight`, `rotation`, `ha | horizontalalignment`, `visible`
 
-### `Axes.grid(visible?, kwargs?)`
+### `Axes.grid(...args)`
 
-grid(visible?, { which, axis, color|c, linewidth|lw, linestyle|ls, alpha }) — Axes.grid. As in matplotlib: line kwargs imply visible=True, visible=null toggles, and the line properties stick to the chosen axes and tick families (major, minor) for later grid() calls. A kwargs object alone, grid({ ... }), is grid(null, { ... }).
+grid(visible?, which?, axis?, { visible, which, axis, color|c, linewidth|lw, linestyle|ls, alpha }) — Axes.grid, positionals in matplotlib's order. As in matplotlib: line kwargs imply visible=True, visible=null toggles, and the line properties stick to the chosen axes and tick families (major, minor) for later grid() calls. A kwargs object alone, grid({ ... }), is grid(null, { ... }); grid() with no arguments turns the grid on.
 
-Keyword arguments (unknown keys throw): `axis`, `which`, `color | c`, `linewidth | lw`, `linestyle | ls`, `alpha`
+Keyword arguments (unknown keys throw): `visible`, `axis`, `which`, `color | c`, `linewidth | lw`, `linestyle | ls`, `alpha`
 
 ### `Axes.legend(kwargs?)`
 

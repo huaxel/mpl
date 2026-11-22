@@ -1118,6 +1118,26 @@ case("font_inter_superscripts", ("$rc", [], {"font.family": ["Inter"]}),
      ("text", [1.05, 4.8e-15, SUP], {"fontweight": "semibold"}), ("text", [1.05, 4.0e-15, SUB], {"fontweight": "bold"}),
      ("text", [1.05, 3.2e-15, "10⁻³ ≤ x₁ ≤ 10³"], {"fontweight": "bold"}))
 
+# Issue #97: matplotlib's optional positionals, bound by name (each figure draws what the keyword forms draw)
+case("positional_reflines_spans", ("plot", [x, sx]),
+     ("axhline", [0.5, 0.1, 0.9], {"color": "C3"}), ("axvline", [2, 0.2, 0.8]), ("axvspan", [3, 4, 0.1, 0.6], {"alpha": 0.3}),
+     ("axhspan", [-0.6, -0.2, 0.5, 0.95], {"color": "C2", "alpha": 0.3}),
+     ("hlines", [[-0.9, 0.9], 6, [8, 9], "C4", "--"]), ("vlines", [[7, 7.5], -1, [0, 0.5], ["C1", "C2"], ":"], {"lw": 2}),
+     ("grid", [True, "major", "y"], {"alpha": 0.5}))
+case("positional_scatter_hist", ("$subplots", [1, 2], {"figsize": [8, 3.5]}),
+     ("scatter", [lin(10, 0, 9), [math.sin(i) for i in range(10)], [10 * (i + 1) for i in range(10)], [i / 9 for i in range(10)]], {"cmap": "plasma"}),
+     ("sca", [1]), ("hist", [BA, 12], {"color": "C2"}), ("fig.subplots_adjust", [0.08, 0.15, 0.97, 0.9, 0.3]))
+case("positional_errorbar_imshow", ("$subplots", [1, 2], {"figsize": [8, 3.5]}),
+     ("errorbar", [[1, 2, 3, 4], [2, 3, 2.5, 4], 0.3, 0.1, "o--"], {"capsize": 3}),
+     ("sca", [1]), ("imshow", [LOGIM2, "viridis", "log"], {"interpolation": "nearest"}))
+case("positional_text_fontdict", ("plot", [x, sx]),
+     ("text", [1, 0.5, "fontdict"], {"fontdict": {"fontsize": 16, "color": "C1"}}),
+     ("text", [5, 0.5, "kwarg wins", {"fontsize": 14, "color": "C1"}], {"color": "C2"}),
+     ("fig.text", [0.02, 0.02, "fig fontdict", {"fontsize": 8, "fontweight": "bold"}], {"color": "C3"}),
+     ("set_title", ["left, padded", {"fontsize": 9, "color": "C4"}, "left", 14], {}),
+     ("annotate", ["peak", [1.6, 1.0], [3, 1.3], "data", "data", {"arrowstyle": "->", "color": "C3"}], {"fontsize": 9}))
+case("positional_autofmt", ("plot", [dates("2025-01-01", 6, (1, "D")), [1, 3, 2, 5, 4, 6]]), ("fig.autofmt_xdate", [0.25, 45, "center"]))
+
 def main():
     check_no_literal_newlines(CASES)
     with open(INDEX, "r") as f:

@@ -1848,6 +1848,373 @@
    "raises": "TypeError",
    "message": "_AxesBase.set_axis_on() takes 1 positional argument but 2 were given",
    "note": "one positional too many"
+  },
+  {
+   "call": [
+    "scatter",
+    [
+     [
+      1,
+      2
+     ],
+     [
+      3,
+      4
+     ],
+     20,
+     "C3"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "scatter",
+    [
+     [
+      1,
+      2
+     ],
+     [
+      3,
+      4
+     ],
+     20
+    ],
+    {
+     "s": 10
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.scatter() got multiple values for argument 's'",
+   "note": "s twice"
+  },
+  {
+   "call": [
+    "axhline",
+    [
+     0.5,
+     0.2,
+     0.8
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axhline",
+    [
+     0.5,
+     0.2
+    ],
+    {
+     "xmin": 0.1
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.axhline() got multiple values for argument 'xmin'",
+   "note": "xmin twice"
+  },
+  {
+   "call": [
+    "axvline",
+    [
+     1,
+     0.1,
+     0.9
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "hlines",
+    [
+     [
+      1,
+      2
+     ],
+     0,
+     1,
+     "r",
+     "--"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "errorbar",
+    [
+     [
+      1,
+      2
+     ],
+     [
+      3,
+      4
+     ],
+     0.1,
+     0.2,
+     "o"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "hist",
+    [
+     [
+      1,
+      2,
+      2,
+      3
+     ],
+     3
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "hist",
+    [
+     [
+      1,
+      2,
+      2,
+      3
+     ],
+     3
+    ],
+    {
+     "bins": 4
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.hist() got multiple values for argument 'bins'",
+   "note": "bins twice"
+  },
+  {
+   "call": [
+    "imshow",
+    [
+     [
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "magma"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axvspan",
+    [
+     1,
+     2,
+     0.2,
+     0.8
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "axhspan",
+    [
+     1,
+     2,
+     0.2,
+     0.8
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "grid",
+    [
+     true,
+     "major",
+     "x"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "text",
+    [
+     0,
+     0,
+     "s",
+     {
+      "fontsize": 12
+     }
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "text",
+    [
+     0,
+     0,
+     "s",
+     "red"
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "'str' object is not a mapping",
+   "note": "fontdict not a dict"
+  },
+  {
+   "call": [
+    "set_title",
+    [
+     "t",
+     {
+      "fontsize": 9
+     },
+     "left",
+     5
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "set_title",
+    [
+     "t",
+     null,
+     "left"
+    ],
+    {
+     "loc": "right"
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Axes.set_title() got multiple values for argument 'loc'",
+   "note": "loc twice"
+  },
+  {
+   "call": [
+    "annotate",
+    [
+     "a",
+     [
+      0.5,
+      0.5
+     ],
+     [
+      0.2,
+      0.2
+     ],
+     "data",
+     "data",
+     {
+      "arrowstyle": "->"
+     }
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fig.text",
+    [
+     0.1,
+     0.1,
+     "s",
+     {
+      "color": "r"
+     }
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fig.subplots_adjust",
+    [
+     0.1,
+     0.1,
+     0.9,
+     0.9
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fig.autofmt_xdate",
+    [
+     0.2,
+     30,
+     "right"
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
   }
  ]
 }
