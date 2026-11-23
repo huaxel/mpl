@@ -46,6 +46,7 @@ DEJAVU_BLOCKS = [
     (0x2000, 0x206F),  # General Punctuation
     (0x2070, 0x209F),  # Superscripts and Subscripts
     (0x20A0, 0x20CF),  # Currency Symbols
+    (0x2100, 0x214F),  # Letterlike Symbols: ℝ ℕ ℤ ℚ ℂ ℏ ℓ ℃ ℉ № ™ Ω Å
     (0x2190, 0x21FF),  # Arrows
     (0x2200, 0x22FF),  # Mathematical Operators
     (0x2500, 0x257F),  # Box Drawing
@@ -58,10 +59,10 @@ DEJAVU_CHARS = list(dict.fromkeys(CHARS + [chr(c) for a, b in DEJAVU_BLOCKS for 
 # Inter maps them: μ σ Δ Ω ■ ● ‒ ▲ ✓ … draw from Inter, as matplotlib draws them. The rest of DejaVu's blocks stay out of Inter (each block's
 # outlines and kerning cost every Inter module); such characters fall back along font.family (src/core/text.ts), where
 # matplotlib would draw Inter's own if Inter has them.
-# Of Mathematical Operators, Inter takes only the comparison and approximation signs tick labels and annotations use
-# (≥ ≤ ∞ ≈ ≠; ± × · → − are in CHARS): the whole block would cost every Inter module for glyphs charts rarely draw.
-INTER_BLOCKS = [(0x0370, 0x03FF), (0x2000, 0x206F), (0x2070, 0x209F), (0x2190, 0x21FF), (0x25A0, 0x25FF), (0x2713, 0x2718)]
-INTER_MATH = list("≥≤∞≈≠")
+INTER_BLOCKS = [(0x0370, 0x03FF), (0x2000, 0x206F), (0x2070, 0x209F), (0x2100, 0x214F), (0x2190, 0x21FF), (0x25A0, 0x25FF), (0x2713, 0x2718)]
+# Every Mathematical Operator Inter v4.0 maps (18): with font.family ['Inter', 'DejaVu Sans'], matplotlib draws ∑ ∫ ∂ ∅ from Inter, so
+# baking fewer would draw DejaVu's there. Letterlike Symbols likewise (Inter maps 21: ℃ ℉ № ™ ℓ …; ℝ ℕ ℤ fall back to DejaVu).
+INTER_MATH = [chr(c) for c in range(0x2200, 0x2300)]
 # superscript one (² and ³ are in CHARS): with Superscripts and Subscripts, exponents written as text (10⁻¹⁵) draw from Inter
 INTER_SUPER = ["\u00b9"]
 INTER_CHARS = list(dict.fromkeys(CHARS + INTER_MATH + INTER_SUPER + [chr(c) for a, b in INTER_BLOCKS for c in range(a, b + 1)]))

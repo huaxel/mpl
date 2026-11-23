@@ -1162,6 +1162,17 @@ case("fill_betweenx_basic", ("plot", [WY1, WX], {"color": "k", "lw": 1}),
 case("fill_betweenx_dates", ("fill_betweenx", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190], 100], {"step": "pre", "alpha": 0.35}),
      ("set_xlabel", ["KiB"]))
 
+# Letterlike Symbols (U+2100-U+214F) in every DejaVu face, as far as each maps them, and Inter's Letterlike and Mathematical Operators:
+# with font.family ['Inter', 'DejaVu Sans'] ℃ ™ ∑ ∫ ∂ draw from Inter and ℝ ℕ ℤ (which Inter lacks) from DejaVu Sans
+LETTERLIKE = "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ Ω Å ℮ ⅋"
+case("font_letterlike_dejavu", ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, n ∈ ℕ"}), ("legend", []), ("set_title", ["f: ℝ → ℂ, ℏ = h/2π"]),
+     ("set_xlabel", ["T (℃), ℓ (m)"]), ("text", [1.05, 6.4, LETTERLIKE]), ("text", [1.05, 5.6, LETTERLIKE], {"fontweight": "bold"}),
+     ("text", [1.05, 4.8, LETTERLIKE], {"family": "DejaVu Serif"}), ("text", [1.05, 4.0, LETTERLIKE], {"family": "DejaVu Serif", "fontweight": "bold"}))
+case("font_letterlike_inter_fallback", ("$rc", [], {"font.family": ["Inter", "DejaVu Sans"]}),
+     ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, ∑ xᵢ"}), ("legend", []), ("set_title", ["f: ℝ → ℂ, ∫ ∂f/∂x dx, ∅ ≠ ∏"]),
+     ("set_xlabel", ["T (℃) № 5™"]), ("text", [1.05, 6.4, LETTERLIKE]), ("text", [1.05, 5.6, LETTERLIKE], {"fontweight": "semibold"}),
+     ("text", [1.05, 4.8, "∂ ∅ ∆ ∏ ∑ ∫ ∶ ⊕ ⊖ ⊗ ⊘ − ∕ ∙ √ ∞ ≈ ≠ ≤ ≥"], {"fontweight": "bold"}), ("text", [1.05, 4.0, "ℓ ℮ ⅍ ℠ ℗ ℞ ℟"], {"fontweight": "medium"}))
+
 # Issue #97: matplotlib's optional positionals, bound by name (each figure draws what the keyword forms draw)
 case("positional_reflines_spans", ("plot", [x, sx]),
      ("axhline", [0.5, 0.1, 0.9], {"color": "C3"}), ("axvline", [2, 0.2, 0.8]), ("axvspan", [3, 4, 0.1, 0.6], {"alpha": 0.3}),
