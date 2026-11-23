@@ -47,7 +47,8 @@ export function handleOf(a: Artist): Option<Handle> {
     case 'axline': return some({ kind: 'line', stroke: a.stroke, markers: { kind: 'none' } });
     case 'segments': return some({ kind: 'collection', color: a.colors[0], widthPt: a.widthPt, style: a.styles[0] });
     case 'span': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: a.edgeStyle.kind === 'some' ? a.edgeStyle.value : 'solid' });
-    case 'bar': case 'fill': case 'polygon': case 'wedge': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: 'solid' });
+    case 'fill': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: a.legendEdgeStyle });
+    case 'bar': case 'polygon': case 'wedge': return some({ kind: 'patch', face: a.face, edge: a.edge, edgeStyle: 'solid' });
     case 'scatter': return some({ kind: 'scatter', shape: a.shape, collection: a.collection, edgeWidthPt: a.edgeWidthPt });
     case 'errorbar': return some({ kind: 'errorbar', errorbar: a.handle });
     case 'image': return none;
@@ -306,17 +307,19 @@ export function drawBar(a: BarArtist, f: Frame, k: number, clip: Clip, span: Spa
  * fill_between as FillBetweenPolyCollection builds it: [start, (x, y1)…, end, (x, y2) reversed],
  * closed. Vertices go through the same folded affine as lines; Agg fills with the non-zero rule.
  */
-export function drawFill(a: FillArtist, f: Frame, k: number, clip: Clip): Drawn {
+export function drawFill(a: FillArtist, f: Frame, theme: Theme, k: number, clip: Clip): Drawn {
   const handle = handleOf(a);
-  // GraphicsContext defaults for collections: butt caps, round joins
-  const stroke: Option<Stroke> = a.edge.kind === 'on' && a.edge.widthPt > 0 ? some({ color: a.edge.color, width: strokePx(a.edge.widthPt, k), cap: 'butt', join: 'round', dash: { kind: 'solid' } }) : none;
+  // GraphicsContext defaults for collections: butt caps, round joins; dashes scaled by the linewidth (_bcast_lwls)
+  const dash = a.edge.kind === 'on' ? dashFor(theme, a.edgeStyle, a.edge.widthPt, k) : { kind: 'solid' as const };
+  const stroke: Option<Stroke> = a.edge.kind === 'on' && a.edge.widthPt > 0 ? some({ color: a.edge.color, width: strokePx(a.edge.widthPt, k), cap: 'butt', join: 'round', dash }) : none;
   const ink = inkOf(a.face, stroke);
   if (a.polygons.length === 0 || ink.kind === 'none') return { nodes: [], lines: [], boxes: [], points: [], paths: [], handle };
   // Two code paths in Collection.draw. One path with edges (a single edge color) takes the single-path optimization:
   // draw_markers, one "marker" at offset (0, 0), which Agg places at pixel (0, H), its path shifted by (0.5, 0.5) since a
   // curvy polygon doesn't snap. Without edges (edgecolor 'none' is an empty array), or with several paths (one per run of
   // `where`), it goes through draw_path_collection, i.e. ordinary paths: y = y·(−ay) + (H − cy).
-  const asMarker = a.edge.kind === 'on' && a.polygons.length === 1;
+  // (the single-path optimization also needs every linestyle undashed: `ls[1] is None`)
+  const asMarker = a.edge.kind === 'on' && a.polygons.length === 1 && dash.kind === 'solid';
   const ty0 = asMarker ? -f.cy : f.Hg - f.cy, nay = -f.ay;
   // PathSnapper, SNAP_AUTO: a path of ≤ 1024 vertices (with the close) whose segments are all axis-aligned within 1e-4 px
   // snaps to floor(v + 0.5) + (odd rounded stroke width ? 0.5 : 0). An edgeless collection snaps as width 0 (fixtures

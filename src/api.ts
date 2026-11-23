@@ -274,12 +274,12 @@ function bboxToAnchor(v: unknown): readonly [number, number, number, number] {
   const n: readonly number[] = v.map(Number);
   return n.length === 2 ? [n[0], n[1], 0, 0] : [n[0], n[1], n[2], n[3]];
 }
-/** fill_between's where: one truth value per x (np.asarray(where, dtype=bool): numbers are true unless 0); another size is matplotlib's ValueError. */
-function parseWhere(v: unknown, n: number): readonly boolean[] {
+/** fill_between's where: one truth value per t (np.asarray(where, dtype=bool): numbers are true unless 0); another size is matplotlib's ValueError. */
+function parseWhere(v: unknown, n: number, fn: string, tDir: 'x' | 'y'): readonly boolean[] {
   if (!Array.isArray(v) || !v.every((b) => typeof b === 'boolean' || (typeof b === 'number' && !Number.isNaN(b)))) {
-    throw new TypeError(`fill_between(): where must be an array of booleans, got ${describeArg(v)}`);
+    throw new TypeError(`${fn}(): where must be an array of booleans, got ${describeArg(v)}`);
   }
-  if (v.length !== n) throw new Error(`where size (${v.length}) does not match 'x' size (${n})`);
+  if (v.length !== n) throw new Error(`where size (${v.length}) does not match '${tDir}' size (${n})`);
   return v.map((b) => b === true || (typeof b === 'number' && b !== 0));
 }
 const isGiven = (o: Option<unknown>): boolean => o.kind === 'some';
@@ -1792,45 +1792,103 @@ export class Axes {
   }
 
   /**
-   * fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc, alpha, linewidth|lw,
-   * label, clip_on }) — a FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both
-   * hold, one polygon per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' |
-   * 'post' | 'mid') fills under a step(…, where=step) line. The positionals follow matplotlib's order; one given both ways is a
-   * TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
+   * fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc|facecolors,
+   * edgecolor|ec|edgecolors, alpha, linewidth|lw|linewidths, linestyle|ls|linestyles|dashes, zorder, label, clip_on }) — a
+   * FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both hold, one polygon
+   * per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' | 'post' | 'mid')
+   * fills under a step(…, where=step) line. As on a Collection, `color` sets face and edge, and of color, facecolor and
+   * edgecolor the later keyword wins; edgecolor 'face' is the face colour; a linestyle dashes the edge (scaled by the
+   * linewidth; 'none' leaves it undashed); zorder defaults to 1. The positionals follow matplotlib's order; one given both
+   * ways is a TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
    */
   fill_between(xRaw: unknown, y1Raw: unknown, ...rest: readonly unknown[]): FillArtist {
     // y2 is optional, so a trailing plain object is the kwargs, as in plot(); y2 may also be a keyword, as in matplotlib
     const kw = new KwReader(bindPositional('fill_between', ['y2', 'where', 'interpolate', 'step'], rest), 'fill_between');
-    const y2Raw = kw.read(['y2'], (v): Result<unknown> => ok(v), (): unknown => 0);
+    return this.fillBetween(kw, 'x', xRaw, y1Raw, kw.read(['y2'], (v): Result<unknown> => ok(v), (): unknown => 0));
+  }
+
+  /**
+   * fill_betweenx(y, x1, x2 = 0, where?, step?, interpolate?, { x2, …fill_between's }) — fill_between across: the area
+   * between the curves (x1, y) and (x2, y). Note matplotlib's positional order here: step comes before interpolate.
+   */
+  fill_betweenx(yRaw: unknown, x1Raw: unknown, ...rest: readonly unknown[]): FillArtist {
+    const kw = new KwReader(bindPositional('fill_betweenx', ['x2', 'where', 'step', 'interpolate'], rest), 'fill_betweenx');
+    return this.fillBetween(kw, 'y', yRaw, x1Raw, kw.read(['x2'], (v): Result<unknown> => ok(v), (): unknown => 0));
+  }
+
+  /** Axes._fill_between_x_or_y: t along `tDir` (x for fill_between), f1 and f2 along the other axis. */
+  private fillBetween(kw: KwReader, tDir: 'x' | 'y', tRaw: unknown, f1Raw: unknown, f2Raw: unknown): FillArtist {
+    const fn = kw.fn;
+    const [tAxis, fAxis] = tDir === 'x' ? [this.xaxis, this.yaxis] : [this.yaxis, this.xaxis];
+    const fDir = tDir === 'x' ? 'y' : 'x';
     const whereRaw = kw.get(['where']);
     const interpolate = kw.read(['interpolate'], bool('interpolate'), () => false);
     const step = kw.read(['step'], (v): Result<Option<FillStep>> => (v === 'pre' || v === 'post' || v === 'mid' ? ok(some(v)) : err(`step must be 'pre', 'post' or 'mid', got ${JSON.stringify(v)}`)), (): Option<FillStep> => none);
-    const x = this.xaxis.convert(unwrap(parseSeries(xRaw, 'x')));
-    const n = x.length;
-    const y1 = typeof y1Raw === 'number' ? new Float64Array(n).fill(y1Raw) : this.yaxis.convert(unwrap(parseSeries(y1Raw, 'y1')));
-    const y2 = typeof y2Raw === 'number' ? new Float64Array(n).fill(y2Raw) : this.yaxis.convert(unwrap(parseSeries(y2Raw, 'y2')));
-    if (y1.length !== n || y2.length !== n) throw new RangeError(`fill_between: x, y1 and y2 must have the same length, got ${n}, ${y1.length}, ${y2.length}`);
-    // _get_data_mask: np.asarray(where, dtype=bool), the same size as x
-    const where: readonly boolean[] = whereRaw.kind === 'none' ? Array.from({ length: n }, () => true) : parseWhere(whereRaw.value, n);
-    const both = kw.read(['color'], (v) => this.paint(v).ok ? ok(some(unwrap(this.paint(v)))) : err('bad color'), (): Option<Paint> => none);
-    const face0 = kw.read(['facecolor', 'fc'], this.paint, (): Paint => (both.kind === 'some' ? both.value : { kind: 'solid', color: this.next('patch') }));
+    const t = tAxis.convert(unwrap(parseSeries(tRaw, tDir)));
+    const n = t.length;
+    const f1 = typeof f1Raw === 'number' ? new Float64Array(n).fill(f1Raw) : fAxis.convert(unwrap(parseSeries(f1Raw, `${fDir}1`)));
+    const f2 = typeof f2Raw === 'number' ? new Float64Array(n).fill(f2Raw) : fAxis.convert(unwrap(parseSeries(f2Raw, `${fDir}2`)));
+    if (f1.length !== n || f2.length !== n) throw new RangeError(`${fn}: ${tDir}, ${fDir}1 and ${fDir}2 must have the same length, got ${n}, ${f1.length}, ${f2.length}`);
+    // _get_data_mask: np.asarray(where, dtype=bool), the same size as t
+    const where: readonly boolean[] = whereRaw.kind === 'none' ? Array.from({ length: n }, () => true) : parseWhere(whereRaw.value, n, fn, tDir);
+    const optPaint = (v: unknown): Result<Option<Paint>> => { const p = this.paint(v); return p.ok ? ok(some(p.value)) : err(p.error); };
+    const color = kw.read(['color'], optPaint, (): Option<Paint> => none);
+    const facecolor = kw.read(['facecolor', 'fc', 'facecolors'], optPaint, (): Option<Paint> => none);
+    const edgecolor = kw.read(['edgecolor', 'ec', 'edgecolors'],
+      (v): Result<Option<Paint | 'face'>> => (v === 'face' ? ok(some('face')) : optPaint(v)), (): Option<Paint | 'face'> => none);
     const alpha = kw.read(['alpha'], unitInterval('alpha'), () => -1);
-    const lw = kw.read(['linewidth', 'lw'], num('linewidth'), () => this.theme.patch.linewidthPt);
+    const lw = kw.read(['linewidth', 'lw', 'linewidths'], num('linewidth'), () => this.theme.patch.linewidthPt);
+    // Collection.set_linestyle: 'None', 'none', '' and ' ' are undashed, not invisible (a Patch would hide its edge)
+    const edgeStyle = kw.read(['linestyle', 'ls', 'linestyles', 'dashes'], parseLinestyle, (): Option<LineStyle> => some('solid'));
+    const zorder = kw.read(['zorder'], num('zorder'), () => 1);
     const lbl = kw.read(['label'], label, (): Label => ({ kind: 'none' }));
     const clip = kw.read(['clip_on', 'clipon', 'clip'], bool('clip_on'), () => true);
     kw.done();
+    // Collection.__init__ applies the keywords in order (Artist._internal_update): set_color sets face and edge, so of color
+    // and facecolor (or edgecolor) the one given later wins. Only without color and facecolor does it take the next colour.
+    const order = Object.keys(kw.kw).filter((k) => !isNullish(kw.kw[k]));
+    const at = (names: readonly string[]): number => Math.max(-1, ...names.map((k) => order.indexOf(k)));
+    const iColor = at(['color']), iFace = at(['facecolor', 'fc', 'facecolors']), iEdge = at(['edgecolor', 'ec', 'edgecolors']);
+    const face0: Paint = facecolor.kind === 'some' && iFace > iColor ? facecolor.value
+      : color.kind === 'some' ? color.value : facecolor.kind === 'some' ? facecolor.value : { kind: 'solid', color: this.next('patch') };
     const withAlpha = (p: Paint): Paint => (p.kind === 'solid' && alpha >= 0 ? { kind: 'solid', color: { hex: p.color.hex, alpha } } : p);
     const face = withAlpha(face0);
-    // Collection edgecolor: color= if given, else patch.edgecolor when patch.force_edgecolor, else none.
-    // An edge with a colour exists even at linewidth 0: it decides Collection.draw's code path.
+    // Collection edgecolor: the later of color= and edgecolor= ('face' is the face colour), else patch.edgecolor when
+    // patch.force_edgecolor, else none. An edge with a colour exists even at linewidth 0: it decides Collection.draw's code path.
     const forced: Paint = this.theme.patch.forceEdge ? { kind: 'solid', color: this.theme.patch.edge } : { kind: 'none' };
-    const edgeP = withAlpha(both.kind === 'some' ? both.value : forced);
+    const edgeGiven: Option<Paint | 'face'> = edgecolor.kind === 'some' && iEdge > iColor ? edgecolor : color.kind === 'some' ? color : edgecolor;
+    const edgeP = edgeGiven.kind === 'none' ? withAlpha(forced) : edgeGiven.value === 'face' ? face : withAlpha(edgeGiven.value);
     const edge: BarEdge = edgeP.kind === 'solid' && edgeP.color.alpha > 0 ? { kind: 'on', color: edgeP.color, widthPt: Math.max(0, lw) } : { kind: 'none' };
+    const style: LineStyle = edgeStyle.kind === 'some' ? edgeStyle.value : 'solid';
     const keep = (v: Float64Array): Float64Array => v.filter((_, i) => where[i]);
-    const fill: FillArtist = { kind: 'fill', x: keep(x), y1: keep(y1), y2: keep(y2), polygons: fillPolygons(x, y1, y2, where, step, interpolate), face, edge, label: lbl, clip };
+    // _fix_pts_xy_order: polygons are built along t, then swapped into (x, y) for fill_betweenx
+    const polys = fillPolygons(t, f1, f2, where, step, interpolate);
+    const fill: FillArtist = {
+      kind: 'fill', direction: tDir, t: keep(t), f1: keep(f1), f2: keep(f2),
+      polygons: tDir === 'x' ? polys : polys.map((p) => ({ x: p.y, y: p.x })),
+      face, edge, edgeStyle: style, legendEdgeStyle: this.collectionDashes(style, Math.max(0, lw)), zorder, label: lbl, clip,
+    };
     this.artists.push(fill);
     this.xaxis.request(); this.yaxis.request();
     return fill;
+  }
+
+  /**
+   * Collection.get_linestyles()[0] as a dash tuple: the pattern already scaled by the linewidth (_bcast_lwls). The
+   * legend's Rectangle takes it through Patch.set_linestyle, which scales it by the linewidth once more
+   * (HandlerPolyCollection._update_prop), so a legend handle's dashes grow with lw² where the collection's grow with lw.
+   */
+  private collectionDashes(style: LineStyle, lw: number): LineStyle {
+    const scale = this.theme.lines.scaleDashes ? lw : 1;
+    const pattern = (seq: readonly number[], offset: number): LineStyle => ({ kind: 'dashes', offset: offset * scale, onoff: some(seq.map((d) => d * scale)) });
+    if (typeof style !== 'string') return style.onoff.kind === 'some' ? pattern(style.onoff.value, style.offset) : style;
+    switch (style) {
+      case 'solid': return 'solid';
+      case 'dashed': return pattern(this.theme.lines.patterns.dashed, 0);
+      case 'dashdot': return pattern(this.theme.lines.patterns.dashdot, 0);
+      case 'dotted': return pattern(this.theme.lines.patterns.dotted, 0);
+      default: return assertNever(style);
+    }
   }
 
   /** The transform tokens text() understands, named as in matplotlib. */

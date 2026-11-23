@@ -320,9 +320,15 @@ Keyword arguments (unknown keys throw): `height`, `left`, `align`, `color | face
 
 ### `Axes.fill_between(xRaw, y1Raw, ...rest)`
 
-fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc, alpha, linewidth|lw, label, clip_on }) — a FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both hold, one polygon per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' | 'post' | 'mid') fills under a step(…, where=step) line. The positionals follow matplotlib's order; one given both ways is a TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
+fill_between(x, y1, y2 = 0, where?, interpolate?, step?, { y2, where, interpolate, step, color, facecolor|fc|facecolors, edgecolor|ec|edgecolors, alpha, linewidth|lw|linewidths, linestyle|ls|linestyles|dashes, zorder, label, clip_on }) — a FillBetweenPolyCollection. `where` (booleans, one per x) fills only between x[i] and x[i + 1] where both hold, one polygon per run; `interpolate` ends each run where y1 − y2 crosses 0 rather than at the last x; `step` ('pre' | 'post' | 'mid') fills under a step(…, where=step) line. As on a Collection, `color` sets face and edge, and of color, facecolor and edgecolor the later keyword wins; edgecolor 'face' is the face colour; a linestyle dashes the edge (scaled by the linewidth; 'none' leaves it undashed); zorder defaults to 1. The positionals follow matplotlib's order; one given both ways is a TypeError, a `where` of the wrong length an Error (matplotlib's ValueError).
 
-Keyword arguments (unknown keys throw): `y2`, `where`, `interpolate`, `step`, `color`, `facecolor | fc`, `alpha`, `linewidth | lw`, `label`, `clip_on | clipon | clip`
+Keyword arguments (unknown keys throw): `y2`, `where`, `interpolate`, `step`, `color`, `facecolor | fc | facecolors`, `edgecolor | ec | edgecolors`, `alpha`, `linewidth | lw | linewidths`, `linestyle | ls | linestyles | dashes`, `zorder`, `label`, `clip_on | clipon | clip`
+
+### `Axes.fill_betweenx(yRaw, x1Raw, ...rest)`
+
+fill_betweenx(y, x1, x2 = 0, where?, step?, interpolate?, { x2, …fill_between's }) — fill_between across: the area between the curves (x1, y) and (x2, y). Note matplotlib's positional order here: step comes before interpolate.
+
+Keyword arguments (unknown keys throw): `x2`, `where`, `interpolate`, `step`, `color`, `facecolor | fc | facecolors`, `edgecolor | ec | edgecolors`, `alpha`, `linewidth | lw | linewidths`, `linestyle | ls | linestyles | dashes`, `zorder`, `label`, `clip_on | clipon | clip`
 
 ### `Axes.get transData()`
 

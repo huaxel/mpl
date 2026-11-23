@@ -5,6 +5,7 @@ import { parsePaint, parseRgb, rcColorString } from './colors.ts';
 import { parseWeight } from './fonts.ts';
 import { parseLinestyle, parseMarker } from './fmt.ts';
 import type { RcLayer, RcValue } from './rc.ts';
+import { splitStringList } from './rc.ts';
 import { lookup } from './std.ts';
 import type { AnchorCode, AxisBelow, Cap, GridWhich, HAlign, Join, LegendLoc, LineStyle, Option, Paint, Result, Rgb, Theme, TitleColor, TickDirection, TickTheme, WhisRc, BoxplotLineRc, BoxplotMeanRc, BoxplotFlierRc } from './types.ts';
 import { err, none, ok, some } from './types.ts';
@@ -116,8 +117,9 @@ class Reader {
   }
 }
 
-/** font.family may be a name or a list; the generic 'sans-serif' expands to font.sans-serif. */
-const nameList = (v: RcValue): readonly string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : typeof v === 'string' ? [v] : []);
+/** font.family and font.sans-serif as validate_stringlist reads them: a list (empty names dropped), or a string of
+ *  comma-separated names ('Inter, DejaVu Sans' is two families, as in matplotlib). */
+const nameList = (v: RcValue): readonly string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && x !== '') : typeof v === 'string' ? splitStringList(v) : []);
 /** font.family as matplotlib's font fallback reads it: each entry resolves to one font (a generic family to the first
  *  font.sans-serif name found), and the entries after the first are the fallback chain. */
 function fontFamilies(fam: RcValue, sans: RcValue): readonly (readonly string[])[] {

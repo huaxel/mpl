@@ -4,6 +4,10 @@
 export type RcValue = string | number | boolean | readonly number[] | readonly string[];
 export type RcLayer = ReadonlyMap<string, RcValue>;
 
+/** validate_stringlist on a string: comma-separated, each item stripped, empty items dropped ('Inter, DejaVu Sans'). */
+export const splitStringList = (v: string): readonly string[] => v.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
+
+
 export const TAB10: readonly string[] = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
                                          '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
 
@@ -27,7 +31,8 @@ export const DEFAULTS: RcLayer = new Map<string, RcValue>(Object.entries({
   'figure.subplot.hspace': 0.2,
   'figure.subplot.top': 0.88,
   'font.size': 10,
-  'font.family': 'DejaVu Sans',
+  // validate_stringlist: matplotlib's default; 'sans-serif' resolves through font.sans-serif to DejaVu Sans
+  'font.family': ['sans-serif'],
   'font.weight': 'normal',
   'font.sans-serif': ['DejaVu Sans', 'Bitstream Vera Sans', 'Arial', 'Helvetica', 'sans-serif'],
   'axes.titleweight': 'normal',

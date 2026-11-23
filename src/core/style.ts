@@ -2,7 +2,7 @@
 //   DEFAULTS < style sheet(s) < per-figure rc < per-artist kwargs
 import { PRO_STYLES } from './data/prostyles.ts';
 import { STYLELIB } from './data/stylelib.ts';
-import { DEFAULTS, mergeLayers } from './rc.ts';
+import { DEFAULTS, mergeLayers, splitStringList } from './rc.ts';
 import type { RcLayer, RcValue } from './rc.ts';
 import { lookup } from './std.ts';
 import type { Result } from './types.ts';
@@ -16,10 +16,18 @@ export type StyleSpec =
 const TRUE = new Set(['true', 't', 'yes', 'y', 'on', '1']);
 const FALSE = new Set(['false', 'f', 'no', 'n', 'off', '0']);
 
+/** rcsetup's validate_stringlist keys: font families, keymaps, animation writer arguments, figure hooks. */
+const isStringListKey = (key: string): boolean =>
+  /^font\.(family|serif|sans-serif|cursive|fantasy|monospace)$/.test(key) || key.startsWith('keymap.')
+  || key === 'animation.ffmpeg_args' || key === 'animation.convert_args' || key === 'figure.hooks';
+
 /** Coerce a raw string by the type of the key's default. Unknown keys stay strings. */
 function coerce(key: string, raw: string): Result<RcValue> {
-  const v = raw.trim();
+  let v = raw.trim();
+  // _rc_params_in_file: a value in double quotes loses them
+  if (v.length >= 2 && v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
   if (key === 'axes.prop_cycle') return parsePropCycle(v);
+  if (isStringListKey(key)) return ok(splitStringList(v));
   const d = lookup(DEFAULTS, key);
   if (d.kind === 'none') return ok(v);
   const dv = d.value;

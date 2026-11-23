@@ -96,7 +96,7 @@ export function dataExtents(artists: readonly Artist[]): { readonly x: Extent; r
           default: assertNever(a.orientation);
         }
         break;
-      case 'fill': scan(a.x, X); scan(a.y1, Y); scan(a.y2, Y); break;
+      case 'fill': { const [T, F] = a.direction === 'x' ? [X, Y] : [Y, X]; scan(a.t, T); scan(a.f1, F); scan(a.f2, F); break; }
       case 'scatter': scan(a.x, X); scan(a.y, Y); break;
       case 'image': { const [l,r,b,tp] = a.extent; scan(Float64Array.of(l,r), X); scan(Float64Array.of(b,tp), Y); break; }
       case 'annotation': break;

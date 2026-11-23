@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 OUT = os.path.join(os.path.dirname(__file__), "api_errors_oracle.json")
 
 # methods mpl exposes with a fixed signature (plot/step/set_xlim/legend take *args and parse them; they are not here)
-AXES = ["axhline", "axvline", "axline", "hlines", "vlines", "errorbar", "hist", "boxplot", "pie", "bar", "barh", "fill_between",
+AXES = ["axhline", "axvline", "axline", "hlines", "vlines", "errorbar", "hist", "boxplot", "pie", "bar", "barh", "fill_between", "fill_betweenx",
         "text", "annotate", "imshow", "scatter", "axvspan", "axhspan", "set_title", "get_title", "tick_params", "set_xlabel",
         "set_ylabel", "set_xticks", "set_yticks", "set_xticklabels", "set_yticklabels", "grid", "set_xscale", "set_yscale",
         "set_aspect", "set_box_aspect", "set_anchor", "set_xinverted", "set_yinverted", "invert_xaxis", "invert_yaxis",
@@ -109,6 +109,17 @@ case("fill_between", [FX, FY], {"where": [True, True]}, note="where shorter than
 case("fill_between", [FX, FY, 0, [True, True, True, True]], {"where": [True, True, True, True]}, note="where twice")
 case("fill_between", [FX, FY], {"step": "sideways"}, note="unknown step")
 case("fill_between", [FX, FY, 0, None, False, "mid", 1], note="a positional past step")
+# fill_between/fill_betweenx: Collection keywords and their aliases; one property twice is normalize_kwargs' TypeError
+case("fill_between", [FX, FY], {"edgecolor": "k", "linestyle": "--", "zorder": 3})
+case("fill_between", [FX, FY], {"edgecolors": "face", "linestyles": ":", "linewidths": 2, "facecolors": "C1"})
+case("fill_between", [FX, FY], {"ec": "k", "edgecolor": "r"}, note="ec and edgecolor")
+case("fill_between", [FX, FY], {"ls": "--", "linestyle": ":"}, note="ls and linestyle")
+case("fill_between", [FX, FY], {"linestyle": "wavy"}, note="unknown linestyle")
+case("fill_betweenx", [FX, FY, 0, [True, True, False, True], "post", True], note="fill_betweenx(y, x1, x2, where, step, interpolate)")
+case("fill_betweenx", [FX, FY], {"x2": 1, "where": [True, True, True, True], "interpolate": True, "step": "mid", "ec": "k"})
+case("fill_betweenx", [FX, FY], {"where": [True, True]}, note="where shorter than y")
+case("fill_betweenx", [FX, FY], {"step": "sideways"}, note="unknown step")
+case("fill_betweenx", [FX, FY, 0, None, "mid", False, 1], note="a positional past interpolate")
 
 # Issue #93: axis(arg) takes 'on' / 'off' / a bool / [xmin, xmax, ymin, ymax]; set_axis_off / set_axis_on take nothing
 case("axis", ["off"])

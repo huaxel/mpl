@@ -1118,6 +1118,50 @@ case("font_inter_superscripts", ("$rc", [], {"font.family": ["Inter"]}),
      ("text", [1.05, 4.8e-15, SUP], {"fontweight": "semibold"}), ("text", [1.05, 4.0e-15, SUB], {"fontweight": "bold"}),
      ("text", [1.05, 3.2e-15, "10⁻³ ≤ x₁ ≤ 10³"], {"fontweight": "bold"}))
 
+# Inter's Greek and Coptic block (U+0370–U+03FF, as far as Inter v4.0 maps it), in every bundled weight, kerned as Inter kerns
+# Greek (HarfBuzz shapes Greek runs with Inter's DFLT script, whose lookups equal latn's); μ (U+03BC) next to the micro sign µ (U+00B5)
+GREEK_UC = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ ΆΈΉΊΌΎΏ ΪΫ"
+GREEK_LC = "αβγδεζηθικλμνξοπρςστυφχψω άέήίόύώ ϊϋΐΰ ϑϕϖϐϰϱϵ"
+case("font_inter_greek", ("$rc", [], {"font.family": ["Inter"]}),
+     ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "μ ± σ"}), ("plot", [[1, 2, 3], [6, 1, 3]], {"label": "Δt = 5 μs (µs)"}),
+     ("legend", []), ("set_title", ["Ω-resistance, α = 0.05, λ = 532 nm"]), ("set_ylabel", ["θ (rad) · Φ"]), ("set_xlabel", ["Τάχος, ΑΥΤΟ, Ψ·Ω, ΓΆΤΑ"]),
+     ("text", [1.05, 6.4, GREEK_UC]), ("text", [1.05, 5.6, GREEK_LC], {"fontweight": "medium"}),
+     ("text", [1.05, 4.8, GREEK_UC], {"fontweight": "semibold"}), ("text", [1.05, 4.0, GREEK_LC], {"fontweight": "bold"}),
+     ("text", [1.05, 3.2, "π ≈ 3.14, Σx² ≥ 0, ΔT·σ"], {"fontweight": "bold"}))
+
+# font.family is validate_stringlist: the string "Inter, DejaVu Sans" is two families, so characters Inter lacks
+# (∀ ∈ ∇ ⇄) draw from DejaVu Sans, as with the list ["Inter", "DejaVu Sans"] (an .mplstyle line reads the same way)
+case("font_family_string_list", ("$rc", [], {"font.family": "Inter, DejaVu Sans"}),
+     ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "∀x ∈ A"}), ("legend", []), ("set_title", ["∇·E ⇄ ρ/ε₀, Δt ≈ 5 μs"]),
+     ("set_xlabel", ["time (μs)"]))
+
+# fill_between's PolyCollection keywords: edgecolor/ec/edgecolors ('face' paints the edge in the face colour), linestyle/ls/
+# linestyles (dashes scaled by the linewidth; 'none' is an undashed edge on a Collection), zorder (Collection default 1).
+# Collection applies color, facecolor and edgecolor in keyword order: the later wins.
+case("fill_between_edge_linestyle", ("plot", [WX, WY1], {"color": "k", "lw": 1.5, "label": "signal"}),
+     ("fill_between", [WX, WY1, WY2], {"facecolor": "C0", "alpha": 0.3, "edgecolor": "C3", "linestyle": "--", "linewidth": 2, "label": "dashed band"}),
+     ("fill_between", [WX, -1.2, -0.6], {"color": "C1", "ec": "k", "ls": ":", "lw": 0.8, "label": "dotted"}),
+     ("fill_between", [WX, WY1, WY2], {"where": ABOVE, "fc": "none", "ec": "C2", "ls": {"$tuple": [0, [6, 2, 1, 2]]}, "lw": 1.2}),
+     ("legend", [], {"loc": "upper right"}))
+case("fill_between_zorder", ("plot", [SX, SY], {"color": "k", "lw": 3}),
+     ("fill_between", [SX, SY], {"alpha": 0.8, "zorder": 3, "label": "over the line"}),
+     ("fill_between", [SX, [v - 1 for v in SY], 0], {"color": "C2", "zorder": 0.5}), ("bar", [[2, 5], [5, 5]], {"color": "C4", "zorder": 0.8}),
+     ("legend", []))
+case("fill_between_color_order",
+     ("fill_between", [SX, [v + 6 for v in SY], 6], {"edgecolor": "k", "color": "C2", "lw": 2}),
+     ("fill_between", [SX, [v + 3 for v in SY], 3], {"color": "C2", "edgecolor": "k", "lw": 2}),
+     ("fill_between", [SX, SY], {"facecolor": "C1", "color": "C4", "lw": 2}),
+     ("fill_between", [SX, [v - 3 for v in SY], -3], {"facecolors": "C0", "edgecolors": "face", "linewidths": 3, "alpha": 0.5}),
+     ("fill_between", [SX, [v - 6 for v in SY], -6], {"color": "C3", "linestyles": "none", "lw": 2, "label": "ls none"}),
+     ("legend", [], {"loc": "upper left"}))
+case("fill_betweenx_basic", ("plot", [WY1, WX], {"color": "k", "lw": 1}),
+     ("fill_betweenx", [WX, WY1], {"alpha": 0.4, "label": "to x=0"}),
+     ("fill_betweenx", [WX, WY1, WY2], {"where": ABOVE, "interpolate": True, "color": "C2", "alpha": 0.5, "label": "above"}),
+     ("fill_betweenx", [SX, [v - 4 for v in SY], -3], {"step": "post", "ec": "C3", "ls": "--", "fc": "none"}),
+     ("legend", []), ("set_xlabel", ["x"]))
+case("fill_betweenx_dates", ("fill_betweenx", [dates("2025-01-06", 9, (7, "D")), [120, 120, 135, 150, 150, 149, 170, 171, 190], 100], {"step": "pre", "alpha": 0.35}),
+     ("set_xlabel", ["KiB"]))
+
 # Issue #97: matplotlib's optional positionals, bound by name (each figure draws what the keyword forms draw)
 case("positional_reflines_spans", ("plot", [x, sx]),
      ("axhline", [0.5, 0.1, 0.9], {"color": "C3"}), ("axvline", [2, 0.2, 0.8]), ("axvspan", [3, 4, 0.1, 0.6], {"alpha": 0.3}),

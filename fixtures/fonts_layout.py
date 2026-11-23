@@ -9,11 +9,15 @@ FACES = {"DejaVu Sans:400": f"{MPL}/DejaVuSans.ttf", "DejaVu Sans:700": f"{MPL}/
 CHARS = [chr(c) for c in range(0x20, 0x7F)] + list("−×µ²³√°±·—–…→←↑↓•’‘“”")
 FIXED = ["Latency held through the evening peak", "16:50 · 10:30 → 11:00", "1x2 3×4 (A) [B] A-B-C --> <-- AVAT To Ty Wa", "office affluent fi fl ffi",
          "North America 11.2M · 94% cached", "p50 14.6 ms", "“quoted” ‘single’ it’s", "HTTP/2 GET /api/v1 — 200 OK…", "2026-10-18 21:00", "−3.5e+06"]
+# Latin next to Greek (the letters every baked face carries, U+0391-U+03C9): libraqm shapes each script run on its own, so no
+# kerning or GSUB crosses a Latin/Greek boundary; brackets, spaces and digits take a neighbour's script (src/core/scripts.ts)
+MIXED = ["ΔT = 5 K, Δt", "AΔ TΛ VΛ Tα Υa AΥ ΥA LΥ", "Γa ΓA Γ. (Γ) Τo ΤO TΟ Pα Fα Yα", "α-β ΔT=5 x Δy 1Δ Δ1 —Υ Υ— ‘Υ’ “Ω”",
+         "(ΑV) [Tα] {ΥA} (A(Υ)V) Ω-resistance", "μ ± σ, Δt = 5 μs (µs)", "office ΔT affine fi→Δ"]
 rnd = random.Random(7)
 out = []
 for fid, path in FACES.items():
     f = ft.FT2Font(path)
-    strings = FIXED + ["".join(rnd.choice(CHARS) for _ in range(rnd.randint(1, 24))) for _ in range(60)]
+    strings = FIXED + MIXED + ["".join(rnd.choice(CHARS) for _ in range(rnd.randint(1, 24))) for _ in range(60)]
     for size, dpi in [(10, 100), (9, 240), (8.5, 120), (14, 144), (28, 240), (7, 72)]:
         f.set_size(size, dpi)
         for s in strings:

@@ -171,7 +171,7 @@ Browsers take the same import through any bundler. To try it in the repo: `git c
 
 ## What's in it
 
-- **Plots:** line, step, scatter, bar and barh, hist, errorbar, boxplot, fill_between, imshow with colorbar,
+- **Plots:** line, step, scatter, bar and barh, hist, errorbar, boxplot, fill_between and fill_betweenx, imshow with colorbar,
   reference lines and spans, text and annotate.
 - **Axes:** linear, log and date scales (matplotlib's date locators and formatters), categories, twinx, inverted
   and shared axes, aspect.

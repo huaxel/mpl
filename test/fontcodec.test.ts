@@ -10,16 +10,16 @@ import { encodeFace } from '../scripts/encode_fonts.ts';
 // 1. lossless: each face decodes to exactly the JSON scripts/gen_fonts.py baked before the split
 //    (sha256 of JSON.stringify of the original src/core/data/fonts/<name>.ts object, at 3e8352f; the Inter faces re-baked
 //    with General Punctuation, Arrows, Geometric Shapes and check marks, then ≥ ≤ ∞ ≈ ≠ (#71), then Superscripts and
-//    Subscripts and ¹ (#94), from Inter v4.0: each the sha256 of JSON.stringify(build/fonts/<face>.json), scripts/gen_fonts.py's own output)
+//    Subscripts and ¹ (#94), then Greek and Coptic, from Inter v4.0: each the sha256 of JSON.stringify(build/fonts/<face>.json), scripts/gen_fonts.py's own output)
 const BAKED_SHA256: Readonly<Record<string, string>> = {
   'dejavu-sans': 'd2f7faa48bc489114a5c98bf79f99956ab13535a7889d60f3e9956dd8116ece5',
   'dejavu-sans-bold': '76c5e15c215b28a5975d19ca08aee47ff1a84f3a78a7f940649c873616072f1a',
   'dejavu-serif': 'dcd708f6cd093db9b3bb19201f40f93e14526ea0f9e5b47dc5c2dc8f82187e06',
   'dejavu-serif-bold': '45d6b481dd91bc044ba89189946fe1661cb7e78e3db934e07e7988b37eecffed',
-  'inter-regular': '349d0d8d8a45ae3ffba200fa06da3b22625a9e43c25edc779ea64c25a3765ba1',
-  'inter-medium': 'bd4d461029a5a1172f4e0241e3a09029b04e671e31dbf446e0614aef12b21528',
-  'inter-semibold': 'dadd43df4fa30b421f24bf20a84ed3030ff272185792e83c1157885308dfd432',
-  'inter-bold': '810a3acd9b8f30d18b8b542f22f1cff8edd8b19cce9f8af68cbe63707443f03b',
+  'inter-regular': '0cbca36aec8f39b4d2b048061fd1cadb70fa7a1e7724e04e0fb9b753f9f6a1ce',
+  'inter-medium': 'ea0caaa15bb258492cece8b045e3a8c83391aeb120d714b4d326e08f17f4aeaf',
+  'inter-semibold': 'b7e2880ed17407d18c33af962c3eef43349d000f1fd7bc23464e7c45fd51c7b6',
+  'inter-bold': '99786de6a35337fa1d7c745cccb85e67127b95014bdacdcf2a57d24b6a41fb67',
 };
 assert.equal(allFonts.length, FACE_CATALOG.length);
 FACE_CATALOG.forEach((e, i) => {

@@ -257,6 +257,24 @@
   },
   {
    "call": [
+    "fill_betweenx",
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.fill_betweenx() takes from 3 to 7 positional arguments but 8 were given",
+   "note": "fill_betweenx(y, x1, x2, where, step, interpolate): one positional too many"
+  },
+  {
+   "call": [
     "text",
     [
      0,
@@ -1729,6 +1747,285 @@
    "raises": "TypeError",
    "message": "Axes.fill_between() takes from 3 to 7 positional arguments but 8 were given",
    "note": "a positional past step"
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "edgecolor": "k",
+     "linestyle": "--",
+     "zorder": 3
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "edgecolors": "face",
+     "linestyles": ":",
+     "linewidths": 2,
+     "facecolors": "C1"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "ec": "k",
+     "edgecolor": "r"
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Got both 'ec' and 'edgecolor', which are aliases of one another",
+   "note": "ec and edgecolor"
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "ls": "--",
+     "linestyle": ":"
+    }
+   ],
+   "raises": "TypeError",
+   "message": "Got both 'ls' and 'linestyle', which are aliases of one another",
+   "note": "ls and linestyle"
+  },
+  {
+   "call": [
+    "fill_between",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "linestyle": "wavy"
+    }
+   ],
+   "raises": "ValueError",
+   "message": "Do not know how to convert 'wavy' to dashes",
+   "note": "unknown linestyle"
+  },
+  {
+   "call": [
+    "fill_betweenx",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ],
+     0,
+     [
+      true,
+      true,
+      false,
+      true
+     ],
+     "post",
+     true
+    ],
+    {}
+   ],
+   "raises": null,
+   "message": null,
+   "note": "fill_betweenx(y, x1, x2, where, step, interpolate)"
+  },
+  {
+   "call": [
+    "fill_betweenx",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "x2": 1,
+     "where": [
+      true,
+      true,
+      true,
+      true
+     ],
+     "interpolate": true,
+     "step": "mid",
+     "ec": "k"
+    }
+   ],
+   "raises": null,
+   "message": null,
+   "note": ""
+  },
+  {
+   "call": [
+    "fill_betweenx",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "where": [
+      true,
+      true
+     ]
+    }
+   ],
+   "raises": "ValueError",
+   "message": "where size (2) does not match 'y' size (4)",
+   "note": "where shorter than y"
+  },
+  {
+   "call": [
+    "fill_betweenx",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ]
+    ],
+    {
+     "step": "sideways"
+    }
+   ],
+   "raises": "KeyError",
+   "message": "'steps-sideways'",
+   "note": "unknown step"
+  },
+  {
+   "call": [
+    "fill_betweenx",
+    [
+     [
+      0,
+      1,
+      2,
+      3
+     ],
+     [
+      1,
+      3,
+      2,
+      4
+     ],
+     0,
+     null,
+     "mid",
+     false,
+     1
+    ],
+    {}
+   ],
+   "raises": "TypeError",
+   "message": "Axes.fill_betweenx() takes from 3 to 7 positional arguments but 8 were given",
+   "note": "a positional past interpolate"
   },
   {
    "call": [

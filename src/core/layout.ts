@@ -93,7 +93,7 @@ function drawArtist(a: Artist, f: Frame, theme: Theme, k: number, clip: Clip, tr
     switch (a.kind) {
       case 'line': return tracer.span('artist.line', { points: a.x.length, stroke: a.stroke.kind, markers: a.markers.kind }, (sp) => drawLine(a, f, theme, k, clip, sp));
       case 'bar': return tracer.span('artist.bar', { rects: a.x.length }, (sp) => drawBar(a, f, k, clip, sp));
-      case 'fill': return tracer.span('artist.fill', { points: a.x.length }, () => drawFill(a, f, k, clip));
+      case 'fill': return tracer.span('artist.fill', { points: a.t.length }, () => drawFill(a, f, theme, k, clip));
       case 'text': return tracer.span('artist.text', { text: a.text, coords: a.coords }, () => drawText(a, f, k * 72, resolveFace(theme.font.families, a.weight)));
       case 'scatter': return tracer.span('artist.scatter', { points: a.x.length }, () => drawScatter(a, f, theme, k, clip));
       case 'annotation': return tracer.span('artist.annotation', { }, () => drawAnnotation(a, f, f.W, k * 72, theme, k, clip));
@@ -113,8 +113,7 @@ function drawArtist(a: Artist, f: Frame, theme: Theme, k: number, clip: Clip, tr
 /** Artist.zorder: patches and path/fill collections 1, lines and line collections 2 (or what the artist says), text 3. */
 function zorder(a: Artist): number {
   switch (a.kind) {
-    case 'fill': return 1;
-    case 'bar': case 'span': case 'scatter': case 'image': return a.zorder;
+    case 'fill': case 'bar': case 'span': case 'scatter': case 'image': return a.zorder;
     case 'axline': return 2;
     case 'line': case 'segments': case 'polygon': case 'wedge': return a.zorder;
     case 'text': case 'annotation': case 'errorbar': return 3;

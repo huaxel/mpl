@@ -201,12 +201,19 @@ export type BarArtist = {
   /** Artist.zorder: patches default to 1 */
   readonly zorder: number;
 };
-/** fill_between: one polygon per contiguous run of `where`, each start → (x, y1)… → end → (x, y2) reversed (src/core/fillbetween.ts).
- *  x, y1, y2 are the points where `where` holds: the data limits (FillBetweenPolyCollection._bbox). `color=` paints the edge too. */
+/** fill_between (direction 'x') and fill_betweenx ('y'): one polygon per contiguous run of `where`, each start → (t, f1)… → end →
+ *  (t, f2) reversed (src/core/fillbetween.ts), in data (x, y). t, f1, f2 are the points where `where` holds: the data limits
+ *  (FillBetweenPolyCollection._bbox), t along `direction`. `color=` paints the edge too. */
 export type FillArtist = {
-  readonly kind: 'fill'; readonly x: Float64Array; readonly y1: Float64Array; readonly y2: Float64Array;
+  readonly kind: 'fill'; readonly direction: 'x' | 'y'; readonly t: Float64Array; readonly f1: Float64Array; readonly f2: Float64Array;
   readonly polygons: readonly { readonly x: Float64Array; readonly y: Float64Array }[];
   readonly face: Paint; readonly edge: BarEdge; readonly label: Label; readonly clip: boolean;
+  /** Collection.set_linestyle: the edge's dashes, scaled by the linewidth ('none' is solid on a Collection) */
+  readonly edgeStyle: LineStyle;
+  /** the legend handle's linestyle: get_linestyles()[0], already scaled once (HandlerPolyCollection) */
+  readonly legendEdgeStyle: LineStyle;
+  /** Collection.zorder: default 1 */
+  readonly zorder: number;
 };
 /** Where a text artist's (x, y) lives: data coordinates or axes fractions (transAxes). */
 export type TextCoords = 'data' | 'axes';

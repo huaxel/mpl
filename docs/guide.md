@@ -86,20 +86,24 @@ a text gets. If the selected face is not registered, rendering throws a `FontNot
 to add. It never draws a different face instead. The face table and details are in [api.md](api.md#fonts).
 
 Text uses DejaVu Sans/Serif or Inter (`scripts/gen_fonts.py` bakes them).
-- DejaVu carries ASCII plus Latin-1, Latin Extended-A, Greek letters, general punctuation, super/subscripts, currency,
+- DejaVu carries ASCII plus Latin-1, Latin Extended-A, the Greek letters Α–Ω α–ω (not the accented ones), general punctuation, super/subscripts, currency,
   arrows, math operators, box drawing, block elements, geometric shapes and ✓/✗.
-- Inter carries ASCII and a few Latin-1 signs (− × µ ¹ ² ³ √ ° ± ·), the math signs ≥ ≤ ∞ ≈ ≠, plus General
-  Punctuation, Superscripts and Subscripts (⁰–⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ, ₀–₉ ₐ ₑ …: `'7×10⁻¹⁵ au'`, `'H₂O'`), Arrows, Geometric Shapes and the check
+- Inter carries ASCII and a few Latin-1 signs (− × µ ¹ ² ³ √ ° ± ·), the math signs ≥ ≤ ∞ ≈ ≠, plus Greek and Coptic
+  (Α–Ω α–ω, accented Ά έ ϊ … and ϑ ϕ ϵ: `'μ ± σ'`, `'Δt = 5 μs'`), General Punctuation, Superscripts and Subscripts (⁰–⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ, ₀–₉ ₐ ₑ …: `'7×10⁻¹⁵ au'`, `'H₂O'`), Arrows, Geometric Shapes and the check
   marks, as far as Inter v4.0 maps them (■ ● ‒ ▲ ✓ …). Each further block costs every Inter
   module its outlines and kerning: Latin-1 letters alone would add 50 KB per face.
 - Font fallback works as in matplotlib 3.11: each `font.family` entry resolves to one font (`'sans-serif'` to the first
   `font.sans-serif` name shipped), and a character the first font lacks comes from the next entry that has it.
-  libraqm shapes each face's run on its own (fixtures `font_fallback_chain*`). With `font.family: ['Inter', 'DejaVu
-  Sans']`, ∀ ∈ ∇ ⇄ draw from DejaVu.
+  libraqm shapes each run of one face and one script on its own (fixtures `font_fallback_chain*`): no kerning or ligature
+  crosses a font change or a Latin/Greek boundary, so `'ΔT'` in Inter does not kern Δ against T (fixture `font_inter_greek`,
+  `fixtures/fonts_layout.py`). With `font.family: ['Inter', 'DejaVu
+  Sans']`, ∀ ∈ ∇ ⇄ draw from DejaVu. As in matplotlib, `font.family` is a list (`validate_stringlist`): the string
+  `'Inter, DejaVu Sans'`, in rc or as an `.mplstyle` line `font.family: Inter, DejaVu Sans`, is the same two families
+  (fixture `font_family_string_list`).
 - Not matched, by design:
   - matplotlib ends every chain with LastResort, a box-per-Unicode-block font mpl doesn't ship, so a character no
     listed font has draws the first font's .notdef box.
-  - Characters Inter has but mpl doesn't bake (accented letters, Greek, math operators, box drawing) fall back along
+  - Characters Inter has but mpl doesn't bake (accented Latin letters, Cyrillic, math operators, box drawing) fall back along
     `font.family`, where matplotlib would draw Inter's own.
 - Missing glyphs warn once: `Glyph N (c) missing from font(s) …` when the font lacks it (as matplotlib does), or
   `… is in Inter but not bundled with mpl` when only the baked subset lacks it.
@@ -243,7 +247,7 @@ fig.toPNGSync({ colors: 64 });            // palette PNG: at most 64 colors, abo
 fig.toPNGSync({ colors: 64, level: 9 });  // and the built-in deflate's slowest, smallest setting
 ```
 
-The API is matplotlib-shaped (`subplots`, `plot`, `step`, `bar`/`barh`, `hist`, `errorbar`, `boxplot`, `fill_between`,
+The API is matplotlib-shaped (`subplots`, `plot`, `step`, `bar`/`barh`, `hist`, `errorbar`, `boxplot`, `fill_between`/`fill_betweenx`,
 `axhline`/`axvline`/`axline`, `hlines`/`vlines`, `text`, `annotate`, `legend`, `grid`, `set_xlim`, `set_yscale('log')`,
 `twinx`, `tight_layout`, styled tick labels, date axes, 9+ bundled styles); unknown keyword arguments are errors, as in
 matplotlib. Subplot grids: `subplots(nrows, ncols, …)` with sharex/sharey, width/height ratios, `subplots_adjust` and
@@ -252,11 +256,11 @@ grid `tight_layout`.
 Done and covered by the oracle: `plot` (incl. `drawstyle`), `step`, `scatter`, `bar`/`barh`, `hist` (every `histtype`,
 stacked or side by side, horizontal, log, density, weights, cumulative, numpy's bin estimators), `errorbar`
 (symmetric/asymmetric, caps, limits, `errorevery`), `boxplot`, `axhline`/`axvline`/`axline`, `hlines`/`vlines`,
-`fill_between`, `text`/`annotate`, `legend`, `grid` with Line2D kwargs (major/minor), `tight_layout`, per-tick label
+`fill_between`/`fill_betweenx` (where, interpolate, step, edge colour and dashes, zorder), `text`/`annotate`, `legend`, `grid` with Line2D kwargs (major/minor), `tight_layout`, per-tick label
 styling, multi-line text, log scales, date axes, `twinx`, 9+ bundled styles, PNG output (own Agg port), SVG with glyph
 outlines (matplotlib's `svg.fonttype='path'`) or `<text>`.
 
-Out of scope so far: `violinplot`, `stem`, `stairs`, `fill`/`fill_betweenx`, spanning subplots (`subplot_mosaic`,
+Out of scope so far: `violinplot`, `stem`, `stairs`, `fill`, spanning subplots (`subplot_mosaic`,
 gridspec slices), general mathtext (only the tick-label forms `10^{n}` / `2×10^{n}`), constrained layout. Within the
 plotting calls: hist's `hatch` and per-dataset `linestyle`, `axline` with a `transform`, and errorbar on polar axes or
 with timedelta errors on date axes.

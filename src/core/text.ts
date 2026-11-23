@@ -12,6 +12,8 @@
 // quad is the advance of 'm'. The box is ceil(width) × (ceil(height) + ceil(depth)).
 import type { Face } from './fonts.ts';
 import { ftScale, glyphOf, inkExtent, mathMetrics, minMetrics, penPositions, shapeGlyphs } from './fonts.ts';
+import type { Script } from './scripts.ts';
+import { resolveScripts } from './scripts.ts';
 import type { Glyph, HAlign, Placement, Rotation, TickLabel } from './types.ts';
 import { assertNever } from './types.ts';
 export const pxPerPt = (dpi: number): number => dpi / 72;
@@ -40,16 +42,18 @@ function faceFor(face: Face, ch: string): Face {
 }
 
 /**
- * Text that needs font fallback: libraqm shapes each run of one face on its own (GSUB and kerning stay inside a run)
- * and the pen carries on across runs in 26.6. The ink box is the union of every glyph's box in its own face; the
- * minimum ascent and descent stay the first face's. Glyph offsets are from the text's start, so every run sits at dx 0.
+ * Text that needs font fallback or mixes scripts: libraqm shapes each run of one face and one script on its own (GSUB and
+ * kerning stay inside a run; src/core/scripts.ts) and the pen carries on across runs in 26.6. The ink box is the union of
+ * every glyph's box in its own face; the minimum ascent and descent stay the first face's. Glyph offsets are from the
+ * text's start, so every run sits at dx 0.
  */
-function measureFallback(text: string, sizePt: number, dpi: number, face: Face): LabelLayout {
-  const groups: { readonly face: Face; text: string }[] = [];
-  for (const ch of text) {
-    const f = faceFor(face, ch), last = groups.length > 0 ? groups[groups.length - 1] : { face, text: '' };
-    if (groups.length > 0 && last.face === f) last.text += ch; else groups.push({ face: f, text: ch });
-  }
+function measureRuns(text: string, sizePt: number, dpi: number, face: Face): LabelLayout {
+  const chars = [...text], scripts = resolveScripts(chars);
+  const groups: { readonly face: Face; readonly script: Script; text: string }[] = [];
+  chars.forEach((ch, i) => {
+    const f = faceFor(face, ch), last = groups.length > 0 ? groups[groups.length - 1] : { face, script: scripts[i], text: '' };
+    if (groups.length > 0 && last.face === f && last.script === scripts[i]) last.text += ch; else groups.push({ face: f, script: scripts[i], text: ch });
+  });
   let pen = 0, lo = Infinity, hi = -Infinity;
   const runs: Run[] = groups.map((g) => {
     const scale = ftScale(g.face, sizePt, dpi), gids = shapeGlyphs(g.face, g.text), pens = penPositions(g.face, gids, scale);
@@ -64,9 +68,18 @@ function measureFallback(text: string, sizePt: number, dpi: number, face: Face):
   return { width: pen / 64, ascent: Math.max(h - d, min.ascent), descent, height: Math.max(h - d, min.ascent) + descent, lastDescent: descent, runs };
 }
 
+/** Whether raqm lays `text` out in more than one script run (ASCII never does: it is Latin and Common only). */
+function mixesScripts(text: string): boolean {
+  let ascii = true;
+  for (let i = 0; i < text.length && ascii; i++) ascii = text.charCodeAt(i) < 0x80;
+  if (ascii) return false;
+  const sc = resolveScripts([...text]);
+  return sc.some((s) => s !== sc[0]);
+}
+
 /** Plain single-line text (Agg path): FT2Font pen positions, 26.6 exact. */
 function measurePlain(text: string, sizePt: number, dpi: number, face: Face): LabelLayout {
-  if (face.fallback.length > 0 && [...text].some((ch) => !face.cmap.has(ch))) return measureFallback(text, sizePt, dpi, face);
+  if ((face.fallback.length > 0 && [...text].some((ch) => !face.cmap.has(ch))) || mixesScripts(text)) return measureRuns(text, sizePt, dpi, face);
   const scale = ftScale(face, sizePt, dpi);
   const gids = shapeGlyphs(face, text), pens = penPositions(face, gids, scale);
   const glyphs = gids.map((gid, i): Glyph => ({ gid, dx: pens[i] / 64 }));
