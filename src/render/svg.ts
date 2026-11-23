@@ -192,13 +192,16 @@ function nodeIO(n: Node, ids: Ids): IOList {
     case 'collection': return collectionIO(n, ids);
     case 'text': {
       if (ids.text === 'glyphs') return glyphText(n, ids);
+      // RendererSVG._draw_text_as_text: one <text> per string, laid out by the viewer; script/fallback runs after the first add nothing
+      if (n.joined) return '';
       const rot = n.rotation === 'vertical' ? ` transform="rotate(-90 ${f(n.x)} ${f(n.y)})"`
         : (n.rotation !== 'horizontal' && n.rotation.kind === 'angled')
           ? ` transform="rotate(${f(-n.rotation.deg)} ${f(n.x)} ${f(n.y)})"` : '';
       const op = n.color.alpha !== 1 ? ` fill-opacity="${f(n.color.alpha)}"` : '';
       const face = faceById(n.face);
       const wt = face.weight !== 400 ? ` font-weight="${face.weight}"` : '';
-      return `<text x="${f(n.x)}" y="${f(n.y + n.dy)}" font-family="${esc(face.family)}"${wt} font-size="${f(n.sizePx)}" fill="${n.color.hex}"${op}${rot}>${esc(n.text)}</text>` + NL;
+      const family = n.line && n.line.families.length > 1 ? n.line.families.map((x) => `'${x}'`).join(', ') : face.family;
+      return `<text x="${f(n.x)}" y="${f(n.y + n.dy)}" font-family="${esc(family)}"${wt} font-size="${f(n.sizePx)}" fill="${n.color.hex}"${op}${rot}>${esc(n.line ? n.line.text : n.text)}</text>` + NL;
     }
     case 'image': return imageSvg(n);
     case 'group': {

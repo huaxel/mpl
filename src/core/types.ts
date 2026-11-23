@@ -70,7 +70,9 @@ export type Node =
   | { readonly kind: 'polyline'; readonly xs: Float64Array; readonly ys: Float64Array; readonly moves: Uint32Array; readonly stroke: Stroke }
   | { readonly kind: 'markers'; readonly shape: readonly Seg[]; readonly xs: Float64Array; readonly ys: Float64Array; readonly ink: Ink }
   | { readonly kind: 'text'; readonly text: string; readonly x: number; readonly y: number; readonly dy: number; readonly sizePx: number; readonly sizePt: number;
-      readonly glyphs: readonly Glyph[]; readonly face: string; readonly color: Rgb; readonly rotation: Rotation }
+      readonly glyphs: readonly Glyph[]; readonly face: string; readonly color: Rgb; readonly rotation: Rotation;
+      /** the whole line when this run starts one shaped in several runs; `joined` runs continue it (src/core/text.ts Run) */
+      readonly line?: { readonly text: string; readonly families: readonly string[] }; readonly joined?: true }
   /** RGBA8 blit (imshow): top-left origin, straight alpha, size w×h. */
   | { readonly kind: 'image'; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly rgba: Uint8Array }
   /**

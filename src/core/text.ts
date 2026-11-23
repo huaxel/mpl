@@ -26,8 +26,14 @@ export const pxPerPt = (dpi: number): number => dpi / 72;
 export const strokePx = (points: number, k: number): number => (points * (k * 72)) / 72;
 
 
-/** A run of glyphs drawn at one size; (dx, dy) from the pen origin, dy < 0 is up. */
-export type Run = { readonly text: string; readonly dx: number; readonly dy: number; readonly sizePt: number; readonly face: string; readonly glyphs: readonly Glyph[] };
+/** A run of glyphs drawn at one size; (dx, dy) from the pen origin, dy < 0 is up. A line shaped in several script or fallback
+ *  runs (measureRuns) is still one string to a text renderer: its first run carries `line` (the whole string and the families
+ *  its runs drew from, in order) and the others are `joined`, so svg.fonttype 'none' writes one <text> as matplotlib does. */
+export type Run = { readonly text: string; readonly dx: number; readonly dy: number; readonly sizePt: number; readonly face: string; readonly glyphs: readonly Glyph[];
+  readonly line?: RunLine; readonly joined?: true };
+export type RunLine = { readonly text: string; readonly families: readonly string[] };
+/** A run's place in its shaped line, copied onto its text node. */
+export const lineOf = (r: Run): { readonly line?: RunLine; readonly joined?: true } => (r.line ? { line: r.line } : r.joined ? { joined: true } : {});
 /** What Text._get_layout needs: box width and the lp-clamped ascent/descent, plus how to draw it. */
 /** ascent: block top to the last line's baseline; descent: that baseline to the block bottom; lastDescent: the last line's
  *  own descent and height the stacked total, both as Text._get_layout keeps them (ascent + descent can differ by an ulp). */
@@ -61,7 +67,7 @@ function measureRuns(text: string, sizePt: number, dpi: number, face: Face): Lab
     if (gids.length > 0) { const ink = inkExtent(g.face, gids, scale); lo = Math.min(lo, ink.yMin); hi = Math.max(hi, ink.yMax); }
     pen += pens[gids.length];
     return { text: g.text, dx: 0, dy: 0, sizePt, face: g.face.id, glyphs };
-  });
+  }).map((r, i): Run => (i === 0 ? { ...r, line: { text, families: [face, ...face.fallback].filter((c) => groups.some((g) => g.face === c)).map((c) => c.family) } } : { ...r, joined: true }));
   const min = minMetrics(face, sizePt, dpi);
   const h = lo > hi ? 0 : hi - lo, d = lo > hi ? 0 : -lo;
   const descent = Math.max(d, min.descent);
