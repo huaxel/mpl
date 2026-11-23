@@ -1164,10 +1164,10 @@ case("fill_betweenx_dates", ("fill_betweenx", [dates("2025-01-06", 9, (7, "D")),
 
 # Letterlike Symbols (U+2100-U+214F) in every DejaVu face, as far as each maps them, and Inter's Letterlike and Mathematical Operators:
 # with font.family ['Inter', 'DejaVu Sans'] ℃ ™ ∑ ∫ ∂ draw from Inter and ℝ ℕ ℤ (which Inter lacks) from DejaVu Sans
-LETTERLIKE = "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ Ω Å ℮ ⅋"
+LETTERLIKE = "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ \u2126 \u212a \u212b ℮ ⅋"  # Ω K Å as the Letterlike code points, not Greek/Latin
 # each string only in characters its face maps: a character no listed font has draws matplotlib's LastResort box, which mpl does not ship
 for fam, slug, reg, bold, xl in (("DejaVu Sans", "sans", LETTERLIKE, LETTERLIKE, "T (℃), ℓ (m)"),
-                                 ("DejaVu Serif", "serif", "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℎ ℃ ℉ № ™ Ω Å", "℃ ℉ ℎ ℏ № ™ Ω ℧ K Å Ⅎ ⅁ ⅂ ⅃ ⅄ ⅋ ⅎ", "T (℃), ℎ (m)")):
+                                 ("DejaVu Serif", "serif", "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℎ ℃ ℉ № ™ \u2126 \u212a \u212b", "℃ ℉ ℎ ℏ № ™ \u2126 ℧ \u212a \u212b Ⅎ ⅁ ⅂ ⅃ ⅄ ⅋ ⅎ", "T (℃), ℎ (m)")):
     case(f"font_letterlike_dejavu_{slug}", ("$rc", [], {"font.family": [fam]}), ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, n ∈ ℕ"}), ("legend", []),
          ("set_title", ["f: ℝ → ℂ, ℏ = h/2π"]), ("set_xlabel", [xl]), ("text", [1.05, 6.4, reg]), ("text", [1.05, 5.6, bold], {"fontweight": "bold"}))
 case("font_letterlike_inter_fallback", ("$rc", [], {"font.family": ["Inter", "DejaVu Sans"]}),

@@ -16,8 +16,8 @@ MIXED = ["ΔT = 5 K, Δt", "AΔ TΛ VΛ Tα Υa AΥ ΥA LΥ", "Γa ΓA Γ. (Γ) 
 # raqm's paired brackets, one string each (the stack is per string): an opening bracket takes the script before it and is
 # pushed; a closing one takes its opening bracket's script, pops what lies above it but keeps the pair, and becomes the
 # script that following Common characters take. Each string fails a mutant of _raqm_resolve_scripts in src/core/scripts.ts.
-# Letterlike Symbols, and the singletons HarfBuzz normalizes to their canonical target (Ω K Å: U+2126 U+212A U+212B)
-LETTERLIKE = ["ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ Ω Å ℮ ⅋", "ΩKÅ Ω K Å AÅ Åa", "T (℃) № 5™, x ∈ ℝ", "\u2000x\u2001y"]
+# Letterlike Symbols (Ω K Å as U+2126 U+212A U+212B: HarfBuzz keeps each font's own glyph for these singletons), and U+2000/U+2001
+LETTERLIKE = ["ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ \u2126 \u212a \u212b ℮ ⅋", "\u2126\u212a\u212b A\u212b \u212ba T\u2126", "T (℃) № 5™, x ∈ ℝ", "\u2000x\u2001y"]
 BRACKETS = ["A(Δ)", "Α(T)", "Δ(A)A", "A{Δ}.", "Δ“A”Δ", "A(Δ(x))A", "Δ(A).T", "Δ[A],Y"]
 rnd = random.Random(7)
 out = []
