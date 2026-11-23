@@ -164,7 +164,7 @@ export function layoutLegend(inp: LegendInput, tracer: Tracer): LegendOutput {
       nodes.push(...handleNodes(item.entry.handle, bx + hx, by + hy, { wPt: hWidthPt, hPt: hHeightPt, ydPt: descentPt, fsPt }, inp.markers, theme, k, tlG, inp.W, H, inp.Hg, inp.snap));
       // one node per run: a label that needs font fallback has a run per face
       for (const r of measure(item.entry.label, fsPt, dpi, face).runs) {
-        nodes.push({ kind: 'text', text: r.text, x: bx + txo + r.dx, y: tl(by + tyo), dy: 0, sizePx: fs, sizePt: fsPt, glyphs: r.glyphs, face: r.face, color: L.labelColor, rotation: 'horizontal' });
+        nodes.push({ kind: 'text', text: r.text, x: bx + txo + r.dx, y: tl(by + tyo), dy: 0, sizePx: fs, sizePt: fsPt, glyphs: r.glyphs, face: r.face, color: L.labelColor, rotation: 'horizontal', join: r.join });
       }
     });
   });

@@ -14,7 +14,7 @@ import type { Face } from './fonts.ts';
 import { ftScale, glyphOf, inkExtent, mathMetrics, minMetrics, penPositions, shapeGlyphs } from './fonts.ts';
 import type { Script } from './scripts.ts';
 import { resolveScripts } from './scripts.ts';
-import type { Glyph, HAlign, Placement, Rotation, TickLabel } from './types.ts';
+import type { Glyph, HAlign, Placement, Rotation, TextJoin, TickLabel } from './types.ts';
 import { assertNever } from './types.ts';
 export const pxPerPt = (dpi: number): number => dpi / 72;
 /**
@@ -26,8 +26,12 @@ export const pxPerPt = (dpi: number): number => dpi / 72;
 export const strokePx = (points: number, k: number): number => (points * (k * 72)) / 72;
 
 
-/** A run of glyphs drawn at one size; (dx, dy) from the pen origin, dy < 0 is up. */
-export type Run = { readonly text: string; readonly dx: number; readonly dy: number; readonly sizePt: number; readonly face: string; readonly glyphs: readonly Glyph[] };
+/** A run of glyphs drawn at one size; (dx, dy) from the pen origin, dy < 0 is up. A line shaped in several script or fallback
+ *  runs (measureRuns) is still one string to a text renderer: its first run carries `line` (the whole string and the families
+ *  its runs drew from, in order) and the others are `joined`, so svg.fonttype 'none' writes one <text> as matplotlib does. */
+const ALONE: TextJoin = { kind: 'alone' }, JOINED: TextJoin = { kind: 'joined' };
+export type Run = { readonly text: string; readonly dx: number; readonly dy: number; readonly sizePt: number; readonly face: string; readonly glyphs: readonly Glyph[];
+  readonly join: TextJoin };
 /** What Text._get_layout needs: box width and the lp-clamped ascent/descent, plus how to draw it. */
 /** ascent: block top to the last line's baseline; descent: that baseline to the block bottom; lastDescent: the last line's
  *  own descent and height the stacked total, both as Text._get_layout keeps them (ascent + descent can differ by an ulp). */
@@ -60,8 +64,8 @@ function measureRuns(text: string, sizePt: number, dpi: number, face: Face): Lab
     const glyphs = gids.map((gid, i): Glyph => ({ gid, dx: (pen + pens[i]) / 64 }));
     if (gids.length > 0) { const ink = inkExtent(g.face, gids, scale); lo = Math.min(lo, ink.yMin); hi = Math.max(hi, ink.yMax); }
     pen += pens[gids.length];
-    return { text: g.text, dx: 0, dy: 0, sizePt, face: g.face.id, glyphs };
-  });
+    return { text: g.text, dx: 0, dy: 0, sizePt, face: g.face.id, glyphs, join: ALONE };
+  }).map((r, i): Run => ({ ...r, join: i === 0 ? { kind: 'head', text, families: [face, ...face.fallback].filter((c) => groups.some((g) => g.face === c)).map((c) => c.family) } : JOINED }));
   const min = minMetrics(face, sizePt, dpi);
   const h = lo > hi ? 0 : hi - lo, d = lo > hi ? 0 : -lo;
   const descent = Math.max(d, min.descent);
@@ -87,7 +91,7 @@ function measurePlain(text: string, sizePt: number, dpi: number, face: Face): La
   const h = text === '' ? 0 : ink.yMax - ink.yMin, d = text === '' ? 0 : -ink.yMin;
   const descent = Math.max(d, min.descent);
   return { width: text === '' ? 0 : pens[pens.length - 1] / 64, ascent: Math.max(h - d, min.ascent), descent, height: Math.max(h - d, min.ascent) + descent, lastDescent: descent,
-           runs: [{ text, dx: 0, dy: 0, sizePt, face: face.id, glyphs }] };
+           runs: [{ text, dx: 0, dy: 0, sizePt, face: face.id, glyphs, join: ALONE }] };
 }
 
 /** Multi-line text as Text._get_layout lays it out (linespacing 'normal', the 3.11 default): each line
@@ -148,7 +152,7 @@ function place(acc: Acc, face: Face, text: string, sizePt: number, dpi: number, 
     acc.top = Math.max(acc.top, m.iceberg * shrink + raise);
     acc.bottom = Math.max(acc.bottom, m.depth * shrink - raise);
   }
-  acc.runs.push({ text, dx: x0, dy: -raise, sizePt: sizePt * shrink, face: face.id, glyphs });
+  acc.runs.push({ text, dx: x0, dy: -raise, sizePt: sizePt * shrink, face: face.id, glyphs, join: ALONE });
 }
 
 function mathPower(coeff: string, base: string, exponent: number, sizePt: number, dpi: number, face: Face): LabelLayout {
