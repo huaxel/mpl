@@ -1165,9 +1165,10 @@ case("fill_betweenx_dates", ("fill_betweenx", [dates("2025-01-06", 9, (7, "D")),
 # Letterlike Symbols (U+2100-U+214F) in every DejaVu face, as far as each maps them, and Inter's Letterlike and Mathematical Operators:
 # with font.family ['Inter', 'DejaVu Sans'] ℃ ™ ∑ ∫ ∂ draw from Inter and ℝ ℕ ℤ (which Inter lacks) from DejaVu Sans
 LETTERLIKE = "ℝ ℕ ℤ ℚ ℂ ℍ ℙ ℏ ℓ ℘ ℑ ℜ ℵ ℃ ℉ № ™ Ω Å ℮ ⅋"
-case("font_letterlike_dejavu", ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, n ∈ ℕ"}), ("legend", []), ("set_title", ["f: ℝ → ℂ, ℏ = h/2π"]),
-     ("set_xlabel", ["T (℃), ℓ (m)"]), ("text", [1.05, 6.4, LETTERLIKE]), ("text", [1.05, 5.6, LETTERLIKE], {"fontweight": "bold"}),
-     ("text", [1.05, 4.8, LETTERLIKE], {"family": "DejaVu Serif"}), ("text", [1.05, 4.0, LETTERLIKE], {"family": "DejaVu Serif", "fontweight": "bold"}))
+for fam, slug in (("DejaVu Sans", "sans"), ("DejaVu Serif", "serif")):
+    case(f"font_letterlike_dejavu_{slug}", ("$rc", [], {"font.family": [fam]}), ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, n ∈ ℕ"}), ("legend", []),
+         ("set_title", ["f: ℝ → ℂ, ℏ = h/2π"]), ("set_xlabel", ["T (℃), ℓ (m)"]), ("text", [1.05, 6.4, LETTERLIKE]),
+         ("text", [1.05, 5.6, LETTERLIKE], {"fontweight": "bold"}))
 case("font_letterlike_inter_fallback", ("$rc", [], {"font.family": ["Inter", "DejaVu Sans"]}),
      ("plot", [[1, 2, 3], [2, 7, 5]], {"label": "x ∈ ℝ, ∑ xᵢ"}), ("legend", []), ("set_title", ["f: ℝ → ℂ, ∫ ∂f/∂x dx, ∅ ≠ ∏"]),
      ("set_xlabel", ["T (℃) № 5™"]), ("text", [1.05, 6.4, LETTERLIKE]), ("text", [1.05, 5.6, LETTERLIKE], {"fontweight": "semibold"}),
