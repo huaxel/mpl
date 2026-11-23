@@ -13,11 +13,15 @@ FIXED = ["Latency held through the evening peak", "16:50 · 10:30 → 11:00", "1
 # kerning or GSUB crosses a Latin/Greek boundary; brackets, spaces and digits take a neighbour's script (src/core/scripts.ts)
 MIXED = ["ΔT = 5 K, Δt", "AΔ TΛ VΛ Tα Υa AΥ ΥA LΥ", "Γa ΓA Γ. (Γ) Τo ΤO TΟ Pα Fα Yα", "α-β ΔT=5 x Δy 1Δ Δ1 —Υ Υ— ‘Υ’ “Ω”",
          "(ΑV) [Tα] {ΥA} (A(Υ)V) Ω-resistance", "μ ± σ, Δt = 5 μs (µs)", "office ΔT affine fi→Δ"]
+# raqm's paired brackets, one string each (the stack is per string): an opening bracket takes the script before it and is
+# pushed; a closing one takes its opening bracket's script, pops what lies above it but keeps the pair, and becomes the
+# script that following Common characters take. Each string fails a mutant of _raqm_resolve_scripts in src/core/scripts.ts.
+BRACKETS = ["A(Δ)", "Α(T)", "Δ(A)A", "A{Δ}.", "Δ“A”Δ", "A(Δ(x))A", "Δ(A).T", "Δ[A],Y"]
 rnd = random.Random(7)
 out = []
 for fid, path in FACES.items():
     f = ft.FT2Font(path)
-    strings = FIXED + MIXED + ["".join(rnd.choice(CHARS) for _ in range(rnd.randint(1, 24))) for _ in range(60)]
+    strings = FIXED + MIXED + BRACKETS + ["".join(rnd.choice(CHARS) for _ in range(rnd.randint(1, 24))) for _ in range(60)]
     for size, dpi in [(10, 100), (9, 240), (8.5, 120), (14, 144), (28, 240), (7, 72)]:
         f.set_size(size, dpi)
         for s in strings:
