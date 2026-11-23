@@ -15,7 +15,7 @@ Only lookup types 1, 4, 5 (format 3) and 6 (formats 1–3) are emitted; others a
 
 Run: python3 scripts/gen_fonts.py
 """
-import json, os, sys, unicodedata
+import json, os, sys
 import matplotlib
 from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen
@@ -91,22 +91,11 @@ def subtables(lookup):
             yield lookup.LookupType, st
 
 
-def singleton(cp):
-    """The target of a singleton canonical decomposition (Ω U+2126 -> U+03A9, K U+212A -> U+004B, Å U+212B -> U+00C5, U+2000 -> U+2002), or None."""
-    d = unicodedata.decomposition(chr(cp))
-    return int(d, 16) if d and not d.startswith("<") and " " not in d else None
-
-
 def bake(slug, family, weight, path):
     t = TTFont(path)
     order = t.getGlyphOrder()
     gid = {n: i for i, n in enumerate(order)}
     cmap = t.getBestCmap()
-    # HarfBuzz's normalizer (matplotlib 3.11's libraqm shaping) draws a character with a singleton canonical decomposition as its
-    # target whenever the font maps the target, even when the font maps the character too (FT2Font._layout, Inter: U+212B is
-    # Aring, glyph 8, not the font's own Angstrom glyph; oracle run 45229502161). Bake that: the character keeps its cmap entry
-    # (so font fallback still finds it in this face) and points at the target's glyph.
-    cmap = {cp: (cmap[s] if (s := singleton(cp)) is not None and s in cmap else g) for cp, g in cmap.items()}
     chars = [c for c in (DEJAVU_CHARS if slug.startswith("dejavu") else INTER_CHARS) if ord(c) in cmap]
     gsub = t["GSUB"].table if "GSUB" in t else None
     roots = langsys_lookups(gsub, FEATURES) if gsub else []
