@@ -70,9 +70,7 @@ export type Node =
   | { readonly kind: 'polyline'; readonly xs: Float64Array; readonly ys: Float64Array; readonly moves: Uint32Array; readonly stroke: Stroke }
   | { readonly kind: 'markers'; readonly shape: readonly Seg[]; readonly xs: Float64Array; readonly ys: Float64Array; readonly ink: Ink }
   | { readonly kind: 'text'; readonly text: string; readonly x: number; readonly y: number; readonly dy: number; readonly sizePx: number; readonly sizePt: number;
-      readonly glyphs: readonly Glyph[]; readonly face: string; readonly color: Rgb; readonly rotation: Rotation;
-      /** the whole line when this run starts one shaped in several runs; `joined` runs continue it (src/core/text.ts Run) */
-      readonly line?: { readonly text: string; readonly families: readonly string[] }; readonly joined?: true }
+      readonly glyphs: readonly Glyph[]; readonly face: string; readonly color: Rgb; readonly rotation: Rotation; readonly join: TextJoin }
   /** RGBA8 blit (imshow): top-left origin, straight alpha, size w×h. */
   | { readonly kind: 'image'; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly rgba: Uint8Array }
   /**
@@ -126,6 +124,10 @@ export type LineStyleName = 'solid' | 'dashed' | 'dashdot' | 'dotted';
  * none is a None or empty sequence: drawn solid, though Line2D still counts it dashed (dash cap and join).
  */
 export type LineStyle = LineStyleName | { readonly kind: 'dashes'; readonly offset: number; readonly onoff: Option<readonly number[]> };
+/** A text run's place in its line (src/core/text.ts measureRuns): a line shaped in several script or fallback runs is still one
+ *  string to a text renderer. Its first run is the 'head' (the whole string and the families its runs drew from, in fallback
+ *  order) and the rest are 'joined', so svg.fonttype 'none' writes one <text>, as matplotlib does. */
+export type TextJoin = { readonly kind: 'alone' } | { readonly kind: 'head'; readonly text: string; readonly families: readonly string[] } | { readonly kind: 'joined' };
 export type Label = { readonly kind: 'none' } | { readonly kind: 'text'; readonly text: string };
 
 export type LineStroke = { readonly kind: 'none' } | { readonly kind: 'on'; readonly color: Rgb; readonly widthPt: number; readonly style: LineStyle };

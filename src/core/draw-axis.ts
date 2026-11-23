@@ -7,7 +7,7 @@ import { lineStroke } from './marks.ts';
 import { resolveFace } from './fonts.ts';
 import { pathNode, snapIf, snapOffset } from './scene.ts';
 import type { TextBox } from './text.ts';
-import { lineOf, measureLabel, placeLayout, pxPerPt, strokePx, windowExtent } from './text.ts';
+import { measureLabel, placeLayout, pxPerPt, strokePx, windowExtent } from './text.ts';
 import type { TickSet } from './ticks.ts';
 import type { Option, TickLabelStyles, AxisGrid, GridLines, Node, Rgb, Seg, Stroke, Theme, TickDirection, TickTheme, TickGrid } from './types.ts';
 import { assertNever, none } from './types.ts';
@@ -49,13 +49,13 @@ export function labelNodes(b: TextBox, k: number, color: Rgb): readonly Node[] {
   return b.runs.filter((r) => r.text !== '').map((r): Node => {
     if (b.rotation === 'horizontal') {
       // y = baseline; dy = y-down run offset. Agg FT y is (H - y) - dy (= (H - y) + dy_up) — must not bake dy into y.
-      return { kind: 'text', text: r.text, x: b.penX + r.dx, y: b.penY, dy: r.dy, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: 'horizontal', ...lineOf(r) };
+      return { kind: 'text', text: r.text, x: b.penX + r.dx, y: b.penY, dy: r.dy, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: 'horizontal', join: r.join };
     }
     if (b.rotation === 'vertical') {
-      return { kind: 'text', text: r.text, x: b.penX + r.dy, y: b.penY - r.dx, dy: 0, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: 'vertical', ...lineOf(r) };
+      return { kind: 'text', text: r.text, x: b.penX + r.dy, y: b.penY - r.dx, dy: 0, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: 'vertical', join: r.join };
     }
     // angled: baseline origin at (penX, penY); glyph advances are applied inside the renderer via cos/sin
-    return { kind: 'text', text: r.text, x: b.penX, y: b.penY, dy: r.dy, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: b.rotation, ...lineOf(r) };
+    return { kind: 'text', text: r.text, x: b.penX, y: b.penY, dy: r.dy, sizePx: r.sizePt * k, sizePt: r.sizePt, glyphs: r.glyphs, face: r.face, color, rotation: b.rotation, join: r.join };
   });
 }
 

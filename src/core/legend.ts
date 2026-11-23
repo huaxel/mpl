@@ -7,7 +7,7 @@ import { dashFor, lineStroke, markersNode } from './marks.ts';
 import type { XY } from './path.ts';
 import { MOVE0 } from './path.ts';
 import { inkOf, pathNode, rectNode, snapIf, snapOffset } from './scene.ts';
-import { lineOf, lpAscent, measure, pxPerPt, strokePx } from './text.ts';
+import { lpAscent, measure, pxPerPt, strokePx } from './text.ts';
 import { resolveFace } from './fonts.ts';
 import type { AnchorCode, Handle, LegendEntry, LegendLoc, LegendMarkers, LineMarkers, Node, Option, Seg, Stroke, Theme } from './types.ts';
 import { collectionNodes, singlePath } from './draw-artists.ts';
@@ -164,7 +164,7 @@ export function layoutLegend(inp: LegendInput, tracer: Tracer): LegendOutput {
       nodes.push(...handleNodes(item.entry.handle, bx + hx, by + hy, { wPt: hWidthPt, hPt: hHeightPt, ydPt: descentPt, fsPt }, inp.markers, theme, k, tlG, inp.W, H, inp.Hg, inp.snap));
       // one node per run: a label that needs font fallback has a run per face
       for (const r of measure(item.entry.label, fsPt, dpi, face).runs) {
-        nodes.push({ kind: 'text', text: r.text, x: bx + txo + r.dx, y: tl(by + tyo), dy: 0, sizePx: fs, sizePt: fsPt, glyphs: r.glyphs, face: r.face, color: L.labelColor, rotation: 'horizontal', ...lineOf(r) });
+        nodes.push({ kind: 'text', text: r.text, x: bx + txo + r.dx, y: tl(by + tyo), dy: 0, sizePx: fs, sizePt: fsPt, glyphs: r.glyphs, face: r.face, color: L.labelColor, rotation: 'horizontal', join: r.join });
       }
     });
   });
