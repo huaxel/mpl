@@ -87,8 +87,8 @@ to add. It never draws a different face instead. The face table and details are 
 
 Text uses DejaVu Sans/Serif or Inter (`scripts/gen_fonts.py` bakes them).
 - DejaVu carries ASCII plus Latin-1, Latin Extended-A, the Greek letters Α–Ω α–ω (not the accented ones), general punctuation, super/subscripts, currency,
-  arrows, math operators, box drawing, block elements, geometric shapes and ✓/✗.
-- Inter carries ASCII and a few Latin-1 signs (− × µ ¹ ² ³ √ ° ± ·), the math signs ≥ ≤ ∞ ≈ ≠, plus Greek and Coptic
+  letterlike symbols (ℝ ℕ ℤ ℂ ℏ ℓ ℃ № ™ …), arrows, math operators, box drawing, block elements, geometric shapes and ✓/✗.
+- Inter carries ASCII and a few Latin-1 signs (− × µ ¹ ² ³ √ ° ± ·), every Mathematical Operator it maps (∂ ∅ ∆ ∏ ∑ ∫ ≥ ≤ ∞ ≈ ≠ ⊕ ⊗ …), Letterlike Symbols (℃ ℉ № ™ ℓ …; ℝ ℕ ℤ, which Inter lacks, fall back along font.family), plus Greek and Coptic
   (Α–Ω α–ω, accented Ά έ ϊ … and ϑ ϕ ϵ: `'μ ± σ'`, `'Δt = 5 μs'`), General Punctuation, Superscripts and Subscripts (⁰–⁹ ⁺ ⁻ ⁼ ⁽ ⁾ ⁿ, ₀–₉ ₐ ₑ …: `'7×10⁻¹⁵ au'`, `'H₂O'`), Arrows, Geometric Shapes and the check
   marks, as far as Inter v4.0 maps them (■ ● ‒ ▲ ✓ …). Each further block costs every Inter
   module its outlines and kerning: Latin-1 letters alone would add 50 KB per face.
